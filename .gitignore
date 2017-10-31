@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/MiniFlow/v15
+/Debug
+/MiniFlow.vcxproj.filters
+/MiniFlow.vcxproj
+/MiniFlow.sln
