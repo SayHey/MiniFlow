@@ -7,3 +7,6 @@
 /MiniFlow.vcxproj.filters
 /MiniFlow.vcxproj
 /MiniFlow.sln
+/x64/Debug
+/MiniFlow/x64/Debug
+/Tensor/x64/Debug

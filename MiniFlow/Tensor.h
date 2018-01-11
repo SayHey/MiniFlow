@@ -9,7 +9,8 @@ namespace miniflow
 	{
 		/*
 			Represents an n-dimensional array of values.
-		*/	
+			PLACEHOLDER CLASS
+		*/
 
 		// TODO: Implement
 		// 
@@ -160,7 +161,7 @@ namespace miniflow
 
 		static Tensor mean(Tensor const& t)
 		{
-			std::size_t m = 1; //placeholder
+			size_t m = 1; //placeholder
 			Scalar d = 1. / m;
 			return d * sum(t);
 		}		
