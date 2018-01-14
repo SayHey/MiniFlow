@@ -18,16 +18,10 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="TensorTest.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="TensorTestEnv.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{5207C9F4-62C2-4041-8C02-D971384901BF}</ProjectGuid>
-    <RootNamespace>Tensor</RootNamespace>
+    <ProjectGuid>{161C71FC-0B3F-4870-9FFA-53D88C69E1D8}</ProjectGuid>
+    <RootNamespace>StaticTensor</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -82,7 +76,6 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Danil\Desktop\MiniFlow\MiniFlow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -121,6 +114,13 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="StaticTensor.h" />
+    <ClInclude Include="StaticTensor2.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="StaticTensorTest.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
