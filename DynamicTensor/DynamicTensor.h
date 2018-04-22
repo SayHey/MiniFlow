@@ -46,15 +46,15 @@ namespace dynamictensor
 		*/
 
 		using SubTensor = typename std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type;
-		//typedef std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type SubTensor;
-		std::vector<SubTensor> data_; // Main memory structure
+		std::vector<SubTensor> data_; // main memory structure
 
+		Shape<dim> shape_; // shape of tensor
 
 		// Internal logic
 		template<typename F>
 		void each(F fn)
 		{
-			for (int i = 0; i < dim; i++)
+			for (int i = 0; i < shape_[0]; i++)
 			{
 				fn(i, data_[i]);
 			}
@@ -63,8 +63,13 @@ namespace dynamictensor
 		template<typename F>
 		static Tensor zip(Tensor const& v1, Tensor const& v2, F fn)
 		{
-			Tensor r;
-			r.each([&](int i, Scalar& x) {x = fn(v1[i], v2[i]); });
+			//assert(t1.shape_ != t2.shape_);
+
+			Tensor r(v1.shape_);
+			r.each([&](int i, SubTensor& x) 
+			{
+				x = fn(v1[i], v2[i]); 
+			});
 			return r;
 		}
 
@@ -79,19 +84,14 @@ namespace dynamictensor
 	public:
 
 		// Initialize empty tensor
-		Tensor() : Tensor(0) {}
+		Tensor() : Tensor(Shape<dim>()) {}
 
-		// Initialize tensor of given size
-		Tensor(Index size)
-		{
-			data_.resize(size);
-		}
-
+		// Initialize tensor of given shape
 		Tensor(Shape<dim> shape) : Tensor(shape, 0) {}
 
 		// Initialize tensor of given shape filled with value
 		template<unsigned dim>
-		Tensor(Shape<dim> shape, T value)
+		Tensor(Shape<dim> shape, T value) : shape_(shape)
 		{
 			data_.resize(shape[0]);
 			for (auto& subTensor : data_)
@@ -102,7 +102,7 @@ namespace dynamictensor
 
 		// Initialize vector of given shape filled with value
 		template<>
-		Tensor(Shape<1> shape, T value)
+		Tensor(Shape<1> shape, T value) : shape_(shape)
 		{
 			data_.resize(shape[0], value);
 		}
@@ -161,7 +161,7 @@ namespace dynamictensor
 
 		friend Tensor operator+(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 + x2; });
+			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 + x2; });
 		}
 
 		friend Tensor operator-(Tensor const& t1, Tensor const& t2)
@@ -247,18 +247,6 @@ namespace dynamictensor
 		}
 
 		//
-		/*
-		static Tensor sum(Tensor const& t)
-		{
-			return Tensor(); //placeholder
-		}
-
-		static Tensor mean(Tensor const& t)
-		{
-			size_t m = 1; //placeholder
-			Scalar d = 1. / m;
-			return d * sum(t);
-		}
 
 		static Tensor exp(const Tensor& t)
 		{
@@ -272,13 +260,28 @@ namespace dynamictensor
 
 		static Tensor dot(const Tensor& t1, const Tensor& t2)
 		{
+			assert(t1.shape_.back() != t2.shape_.front());
+
+
+
 			return Tensor(); //placeholder
 		}
 
-		Tensor T() const
+		static Tensor sum(Tensor const& t)
 		{
-			return *this; //placeholder
+			return Tensor(); //placeholder
 		}
-		*/
+
+		static Tensor mean(Tensor const& t)
+		{
+			size_t m = 1; //placeholder
+			Scalar d = 1. / m;
+			return d * sum(t);
+		}
+
+		Tensor Transpose() const
+		{
+			return Tensor(); //placeholder
+		}
 	};
 }
