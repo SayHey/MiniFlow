@@ -17,6 +17,8 @@ namespace dynamictensor
 
 		Index idx_[dim];
 
+		static const unsigned dim_ = dim;
+
 		Index operator [](int i) const 
 		{ 
 			return idx_[i];
@@ -33,7 +35,6 @@ namespace dynamictensor
 			for (int i = 1; i < dim; i++) subshape[i - 1] = idx_[i];
 			return subshape;
 		}
-
 	};
 
 	template<class T, unsigned dim> class Tensor
@@ -43,8 +44,11 @@ namespace dynamictensor
 			Stored as std::vector of vectors, 
 			whose size is dynamic and allocated in realtime.
 		*/
-		typedef Tensor<T, dim - 1> SubTensor;
+
+		using SubTensor = typename std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type;
+		//typedef std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type SubTensor;
 		std::vector<SubTensor> data_; // Main memory structure
+
 
 		// Internal logic
 		template<typename F>
@@ -83,20 +87,24 @@ namespace dynamictensor
 			data_.resize(size);
 		}
 
-		// Initialize tensor of given size filled with value
-		Tensor(Index size, T value)
-		{
-			data_.resize(size, value);
-		}
+		Tensor(Shape<dim> shape) : Tensor(shape, 0) {}
 
 		// Initialize tensor of given shape filled with value
+		template<unsigned dim>
 		Tensor(Shape<dim> shape, T value)
 		{
-			data_.resize(shape[0], value);
-			for (SubTensor& subTensor : data_)
+			data_.resize(shape[0]);
+			for (auto& subTensor : data_)
 			{
 				subTensor = SubTensor(shape.subShape(), value);
 			}
+		}
+
+		// Initialize vector of given shape filled with value
+		template<>
+		Tensor(Shape<1> shape, T value)
+		{
+			data_.resize(shape[0], value);
 		}
 
 		// Access operator const
@@ -112,19 +120,41 @@ namespace dynamictensor
 		}
 
 		// Prints tensor in console
-		void print(int level = 0)
+		void print() const
+		{
+			print<dim>();
+			std::cin.get();
+		}
+
+		template<unsigned d>
+		void print(int level = 0) const
 		{
 			for (int i = 0; i <= level; i++) std::cout << " ";
 			std::cout << "{" << std::endl;
 			for (int i = 0; i < data_.size() - 1; i++)
 			{
-				data_[i].print(level + 1);
+				data_[i].print<d - 1>(level + 1);
 				std::cout << "," << std::endl;
 			}
-			data_.back().print(level + 1);
+			data_.back().print<d - 1>(level + 1);
 			std::cout <<  std::endl;
 			for (int i = 0; i <= level; i++) std::cout << " ";
 			std::cout << "}";
+		}
+
+		// Prints vector in console
+		template<>
+		void print<1>(int level) const
+		{
+			for (int i = 0; i <= level; i++) std::cout << " ";
+			std::cout << "{ ";
+			for (int i = 0; i < data_.size() - 1; i++)
+			{
+
+				std::cout << data_[i] << ", ";
+			}
+			std::cout << data_.back();
+			std::cout << " }";
 		}
 
 		// Element-wise tensor operations
@@ -216,50 +246,39 @@ namespace dynamictensor
 			return t * -1;
 		}
 
-	};
-
-	template<class T> class Tensor<T, 1>
-	{
+		//
 		/*
-			Template specification.
-			Represents an 1-dimensional array of values aka vector.
-			Stored as std::vector.
+		static Tensor sum(Tensor const& t)
+		{
+			return Tensor(); //placeholder
+		}
+
+		static Tensor mean(Tensor const& t)
+		{
+			size_t m = 1; //placeholder
+			Scalar d = 1. / m;
+			return d * sum(t);
+		}
+
+		static Tensor exp(const Tensor& t)
+		{
+			return Tensor::map(t, [&](Scalar x) {return pow(EXP, x); });
+		}
+
+		static Tensor sqr(const Tensor& t)
+		{
+			return t * t;
+		}
+
+		static Tensor dot(const Tensor& t1, const Tensor& t2)
+		{
+			return Tensor(); //placeholder
+		}
+
+		Tensor T() const
+		{
+			return *this; //placeholder
+		}
 		*/
-
-		std::vector<T> data_;
-
-	public:
-
-		// Initialize empty vector
-		Tensor() : Tensor(0) {}
-
-		// Initialize vector of given size
-		Tensor(Index size) : Tensor(size, 0) {}
-
-		// Initialize tensor of given shape (specification)
-		Tensor(Shape<1> shape) : Tensor(shape[0]) {}
-
-		// Initialize tensor of given shape filled with value (specification)
-		Tensor(Shape<1> shape, T value) : Tensor(shape[0], value) {}
-
-		// Initialize vector of given size filled with value
-		Tensor(Index size, T value)
-		{
-			data_.resize(size, value);
-		}
-
-		// Prints vector in console
-		void print(int level = 0)
-		{
-			for (int i = 0; i <= level; i++) std::cout << " ";
-			std::cout << "{ ";
-			for (int i = 0; i < data_.size() - 1; i++)
-			{
-
-				std::cout << data_[i] << ", ";
-			}
-			std::cout << data_.back();
-			std::cout << " }";
-		}
 	};
 }
