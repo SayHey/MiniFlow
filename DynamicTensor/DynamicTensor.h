@@ -77,6 +77,15 @@ namespace dynamictensor
 		}
 
 		template<typename F>
+		void each(F fn) const
+		{
+			for (int i = 0; i < shape_[0]; i++)
+			{
+				fn(i, data_[i]);
+			}
+		}
+
+		template<typename F>
 		static Tensor zip(Tensor const& t1, Tensor const& t2, F fn)
 		{
 			assert(t1.shape_ == t2.shape_);
@@ -131,6 +140,12 @@ namespace dynamictensor
 			return data_[i];
 		}
 
+		// Get shape
+		Shape<dim> shape() const
+		{
+			return shape_;
+		}
+
 		// Prints tensor in console
 		void print() const
 		{
@@ -138,17 +153,17 @@ namespace dynamictensor
 			std::cin.get();
 		}
 
-		template<unsigned d>
+		template<unsigned dim>
 		void print(int level = 0) const
 		{
 			for (int i = 0; i <= level; i++) std::cout << " ";
 			std::cout << "{" << std::endl;
 			for (int i = 0; i < data_.size() - 1; i++)
 			{
-				data_[i].print<d - 1>(level + 1);
+				data_[i].print<dim - 1>(level + 1);
 				std::cout << "," << std::endl;
 			}
-			data_.back().print<d - 1>(level + 1);
+			data_.back().print<dim - 1>(level + 1);
 			std::cout <<  std::endl;
 			for (int i = 0; i <= level; i++) std::cout << " ";
 			std::cout << "}";
@@ -270,23 +285,22 @@ namespace dynamictensor
 			return t * t;
 		}
 
-		static Tensor dot(const Tensor& t1, const Tensor& t2)
+		static T sum(Tensor<T, 1> const& t)
 		{
-			assert(t1.shape_.back() == t2.shape_.front());
-
-			return Tensor(); //placeholder
+			T sum = 0;
+			t.each([&](int i, SubTensor const& x) { sum += x; });
+			return sum;
 		}
 
-		static Tensor sum(Tensor const& t)
+		static T mean(Tensor<T, 1> const& t)
 		{
-			return Tensor(); //placeholder
+			return sum(t) / t.shape_[0];
 		}
 
-		static Tensor mean(Tensor const& t)
+		static T dot(const Tensor<T, 1>& t1, const Tensor<T, 1>& t2)
 		{
-			size_t m = 1; //placeholder
-			Scalar d = 1. / m;
-			return d * sum(t);
+			assert(t1.shape_ == t2.shape_);
+			return sum(t1*t2);
 		}
 
 		Tensor Transpose() const
