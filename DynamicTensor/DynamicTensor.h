@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <iostream>
 #include <vector>
 #include <initializer_list>
@@ -19,12 +20,12 @@ namespace dynamictensor
 
 		static const unsigned dim_ = dim;
 
-		Index operator [](int i) const 
+		Index operator[](int i) const 
 		{ 
 			return idx_[i];
 		}
 
-		Index& operator [](int i)
+		Index& operator[](int i)
 		{
 			return idx_[i];
 		}
@@ -35,6 +36,20 @@ namespace dynamictensor
 			for (int i = 1; i < dim; i++) subshape[i - 1] = idx_[i];
 			return subshape;
 		}
+
+		bool operator==(Shape const& s) const
+		{
+			for (int i = 0; i < dim; i++)
+			{
+				if (s.idx_[i] != idx_[i]) return false;
+			}
+			return true;
+		}
+
+		bool operator!=(Shape const& s) const
+		{
+			return !(operator==(s));
+		}
 	};
 
 	template<class T, unsigned dim> class Tensor
@@ -42,7 +57,8 @@ namespace dynamictensor
 		/*
 			Represents an n-dimensional array of values.
 			Stored as std::vector of vectors, 
-			whose size is dynamic and allocated in realtime.
+			whose shape is dynamic and allocated in realtime.
+			Only dimention of tensor is static.
 		*/
 
 		using SubTensor = typename std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type;
@@ -61,23 +77,19 @@ namespace dynamictensor
 		}
 
 		template<typename F>
-		static Tensor zip(Tensor const& v1, Tensor const& v2, F fn)
+		static Tensor zip(Tensor const& t1, Tensor const& t2, F fn)
 		{
-			//assert(t1.shape_ != t2.shape_);
-
-			Tensor r(v1.shape_);
-			r.each([&](int i, SubTensor& x) 
-			{
-				x = fn(v1[i], v2[i]); 
-			});
+			assert(t1.shape_ == t2.shape_);
+			Tensor r(t1.shape_);
+			r.each([&](int i, SubTensor& x) { x = fn(t1[i], t2[i]); });
 			return r;
 		}
 
 		template<typename F>
-		static Tensor map(Tensor const& v, F fn)
+		static Tensor map(Tensor const& t, F fn)
 		{
-			Tensor r;
-			r.each([&](int i, Scalar& x) {x = fn(v[i]); });
+			Tensor r(t.shape_);
+			r.each([&](int i, SubTensor& x) {x = fn(t[i]); });
 			return r;
 		}
 
@@ -166,17 +178,17 @@ namespace dynamictensor
 
 		friend Tensor operator-(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 - x2; });
+			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 - x2; });
 		}
 
 		friend Tensor operator*(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 * x2; });
+			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 * x2; });
 		}
 
 		friend Tensor operator/(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 / x2; });
+			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 / x2; });
 		}
 
 		void operator+=(const Tensor& t)
@@ -203,7 +215,7 @@ namespace dynamictensor
 
 		friend Tensor operator+(Tensor const& t, Scalar s)
 		{
-			return Tensor::map(t, [&](Scalar x) {return x + s; });
+			return Tensor::map(t, [&](SubTensor x) {return x + s; });
 		}
 
 		friend Tensor operator+(Scalar s, Tensor const& t)
@@ -213,17 +225,17 @@ namespace dynamictensor
 
 		friend Tensor operator-(Tensor const& t, Scalar s)
 		{
-			return Tensor::map(t, [&](Scalar x) {return x - s; });
+			return Tensor::map(t, [&](SubTensor x) {return x - s; });
 		}
 
 		friend Tensor operator-(Scalar s, Tensor const& t)
 		{
-			return t - s;
+			return -1 * t + s;
 		}
 
 		friend Tensor operator*(Tensor const& t, Scalar s)
 		{
-			return Tensor::map(t, [&](Scalar x) {return x * s; });
+			return Tensor::map(t, [&](SubTensor x) {return x * s; });
 		}
 
 		friend Tensor operator*(Scalar s, Tensor const& t)
@@ -233,7 +245,7 @@ namespace dynamictensor
 
 		friend Tensor operator/(Scalar s, Tensor const& t)
 		{
-			return Tensor::map(t, [&](Scalar x) {return s / x; });
+			return Tensor::map(t, [&](SubTensor x) {return s / x; });
 		}
 
 		friend Tensor operator/(Tensor const& t, Scalar s)
@@ -260,9 +272,7 @@ namespace dynamictensor
 
 		static Tensor dot(const Tensor& t1, const Tensor& t2)
 		{
-			assert(t1.shape_.back() != t2.shape_.front());
-
-
+			assert(t1.shape_.back() == t2.shape_.front());
 
 			return Tensor(); //placeholder
 		}

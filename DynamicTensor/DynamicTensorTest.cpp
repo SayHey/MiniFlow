@@ -6,11 +6,11 @@ int main()
 	dynamictensor::Tensor<int, 2> tensor2(shape2, 1);
 
 	dynamictensor::Shape<3> shape3{ 2,3,4 };
-	dynamictensor::Tensor<int, 3> tensor3(shape3, 1);
+	dynamictensor::Tensor<int, 3> tensor3(shape3, 3);
 
 	dynamictensor::Tensor<int, 3> tensor4(shape3, 2);
 
-	auto tensor5 = tensor3 + tensor4;
+	auto tensor5 = 3* tensor3;
 
 	tensor5.print();
 
