@@ -19,6 +19,8 @@ int main()
 	auto mean = dynamictensor::Tensor<int, 1>::mean(tensor1);
 	auto dot = dynamictensor::Tensor<int, 1>::dot(tensor1, tensor1);
 
+	auto tensorT = dynamictensor::Tensor<int, 2>::Transpose(tensor2);
+
 	tensor5.print();
 
 	return 0;

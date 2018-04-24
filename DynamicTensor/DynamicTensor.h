@@ -9,6 +9,7 @@ namespace dynamictensor
 {
 	typedef std::size_t Index;
 	typedef double Scalar;
+	Scalar EXP = 2.71828182845904523536;
 
 	template<unsigned dim> struct Shape
 	{
@@ -17,24 +18,51 @@ namespace dynamictensor
 		*/
 
 		Index idx_[dim];
-
 		static const unsigned dim_ = dim;
 
-		Index operator[](int i) const 
-		{ 
-			return idx_[i];
+		// Shape convolution returns dim - 1 fold of
+		// original shape without k's dimention.
+		Shape<dim - 1> convolutionShape(int k) const
+		{
+			Shape<dim - 1> subshape;
+			for (int i = 0; i < dim - 1; i++)
+			{
+				int j = (i < k) ? i : i + 1;
+				subshape[i] = idx_[j];
+			}
+			return subshape;
 		}
+
+		// Folds first dimention.
+		// This is the shape of subtensor of 
+		// a tensor of given shape.
+		Shape<dim - 1> subShape() const
+		{
+			return convolutionShape(0);
+		}
+
+		// Folds last dimention.
+		Shape<dim - 1> lcShape() const
+		{
+			return convolutionShape(dim);
+		} //this name is not cool, come up with the new one
+
+		//Transpose shape
+		static Shape<2> transpose(Shape<2> const& shape)
+		{
+			return Shape<2>{ shape.idx_[1], shape.idx_[0] };
+		}
+
+		// Auxiliary operators
 
 		Index& operator[](int i)
 		{
 			return idx_[i];
 		}
 
-		Shape<dim - 1> subShape() const 
-		{ 
-			Shape<dim - 1> subshape;
-			for (int i = 1; i < dim; i++) subshape[i - 1] = idx_[i];
-			return subshape;
+		Index operator[](int i) const
+		{
+			return idx_[i];
 		}
 
 		bool operator==(Shape const& s) const
@@ -56,15 +84,20 @@ namespace dynamictensor
 	{
 		/*
 			Represents an n-dimensional array of values.
-			Stored as std::vector of vectors, 
+			Stored as std::vector of vectors,
 			whose shape is dynamic and allocated in realtime.
 			Only dimention of tensor is static.
 		*/
 
+		// Tempalte statics
+		static const unsigned dim_ = dim;
 		using SubTensor = typename std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type;
-		std::vector<SubTensor> data_; // main memory structure
+		using type = T;
 
+		std::vector<SubTensor> data_; // main memory structure
 		Shape<dim> shape_; // shape of tensor
+
+	public:
 
 		// Internal logic
 		template<typename F>
@@ -164,7 +197,7 @@ namespace dynamictensor
 				std::cout << "," << std::endl;
 			}
 			data_.back().print<dim - 1>(level + 1);
-			std::cout <<  std::endl;
+			std::cout << std::endl;
 			for (int i = 0; i <= level; i++) std::cout << " ";
 			std::cout << "}";
 		}
@@ -188,22 +221,22 @@ namespace dynamictensor
 
 		friend Tensor operator+(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 + x2; });
+			return zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 + x2; });
 		}
 
 		friend Tensor operator-(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 - x2; });
+			return zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 - x2; });
 		}
 
 		friend Tensor operator*(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 * x2; });
+			return zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 * x2; });
 		}
 
 		friend Tensor operator/(Tensor const& t1, Tensor const& t2)
 		{
-			return Tensor::zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 / x2; });
+			return zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 / x2; });
 		}
 
 		void operator+=(const Tensor& t)
@@ -230,7 +263,7 @@ namespace dynamictensor
 
 		friend Tensor operator+(Tensor const& t, Scalar s)
 		{
-			return Tensor::map(t, [&](SubTensor x) {return x + s; });
+			return map(t, [&](SubTensor x) {return x + s; });
 		}
 
 		friend Tensor operator+(Scalar s, Tensor const& t)
@@ -240,7 +273,7 @@ namespace dynamictensor
 
 		friend Tensor operator-(Tensor const& t, Scalar s)
 		{
-			return Tensor::map(t, [&](SubTensor x) {return x - s; });
+			return map(t, [&](SubTensor x) {return x - s; });
 		}
 
 		friend Tensor operator-(Scalar s, Tensor const& t)
@@ -250,7 +283,7 @@ namespace dynamictensor
 
 		friend Tensor operator*(Tensor const& t, Scalar s)
 		{
-			return Tensor::map(t, [&](SubTensor x) {return x * s; });
+			return map(t, [&](SubTensor x) {return x * s; });
 		}
 
 		friend Tensor operator*(Scalar s, Tensor const& t)
@@ -260,7 +293,7 @@ namespace dynamictensor
 
 		friend Tensor operator/(Scalar s, Tensor const& t)
 		{
-			return Tensor::map(t, [&](SubTensor x) {return s / x; });
+			return map(t, [&](SubTensor x) {return s / x; });
 		}
 
 		friend Tensor operator/(Tensor const& t, Scalar s)
@@ -273,17 +306,19 @@ namespace dynamictensor
 			return t * -1;
 		}
 
-		//
+		// Math functions
 
 		static Tensor exp(const Tensor& t)
 		{
-			return Tensor::map(t, [&](Scalar x) {return pow(EXP, x); });
+			return map(t, [&](Scalar x) {return pow(EXP, x); });
 		}
 
 		static Tensor sqr(const Tensor& t)
 		{
 			return t * t;
 		}
+
+		// Special functions
 
 		static T sum(Tensor<T, 1> const& t)
 		{
@@ -303,9 +338,24 @@ namespace dynamictensor
 			return sum(t1*t2);
 		}
 
-		Tensor Transpose() const
+		static Tensor<T, 2> Transpose(Tensor<T, 2> const& input)
 		{
-			return Tensor(); //placeholder
+			Shape<2> transposedShape = Shape<2>::transpose(input.shape_);
+			Tensor<T, 2> transposed(transposedShape);
+			input.each([&](int i, SubTensor const& subtensor)
+			{
+				subtensor.each([&](int j, T const& x)
+				{
+					transposed[j][i] = x;
+				});
+			});
+
+			return transposed;
 		}
+
+		// now make above special functions tensorwide
+
+		//TODO
+		//..
 	};
 }
