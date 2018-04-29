@@ -89,6 +89,8 @@ namespace dynamictensor
 			Only dimention of tensor is static.
 		*/
 
+	public:
+
 		// Tempalte statics
 		static const unsigned dim_ = dim;
 		using SubTensor = typename std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type;
@@ -305,57 +307,84 @@ namespace dynamictensor
 		{
 			return t * -1;
 		}
-
-		// Math functions
-
-		static Tensor exp(const Tensor& t)
-		{
-			return map(t, [&](Scalar x) {return pow(EXP, x); });
-		}
-
-		static Tensor sqr(const Tensor& t)
-		{
-			return t * t;
-		}
-
-		// Special functions
-
-		static T sum(Tensor<T, 1> const& t)
-		{
-			T sum = 0;
-			t.each([&](int i, SubTensor const& x) { sum += x; });
-			return sum;
-		}
-
-		static T mean(Tensor<T, 1> const& t)
-		{
-			return sum(t) / t.shape_[0];
-		}
-
-		static T dot(const Tensor<T, 1>& t1, const Tensor<T, 1>& t2)
-		{
-			assert(t1.shape_ == t2.shape_);
-			return sum(t1*t2);
-		}
-
-		static Tensor<T, 2> Transpose(Tensor<T, 2> const& input)
-		{
-			Shape<2> transposedShape = Shape<2>::transpose(input.shape_);
-			Tensor<T, 2> transposed(transposedShape);
-			input.each([&](int i, SubTensor const& subtensor)
-			{
-				subtensor.each([&](int j, T const& x)
-				{
-					transposed[j][i] = x;
-				});
-			});
-
-			return transposed;
-		}
-
-		// now make above special functions tensorwide
-
-		//TODO
-		//..
+		
 	};
+
+	// Math functions
+
+	template<class T, unsigned dim>
+	Tensor<T, dim> exp(const Tensor<T, dim>& t)
+	{
+		return map(t, [&](Scalar x) {return pow(EXP, x); });
+	}
+
+	template<class T, unsigned dim>
+	Tensor<T, dim> sqr(const Tensor<T, dim>& t)
+	{
+		return t * t;
+	}
+
+	// Special functions
+
+	// now make above special functions tensorwide
+
+	//TODO
+	//..
+
+	//Sum block
+	template<class T, unsigned dim>
+	Tensor<T, dim-1> sum(Tensor<T, dim> const& t)
+	{
+		Tensor<T, dim - 1> r(t.shape().lcShape());
+		r.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& x) {x = sum(t[i]); });
+		return r;
+	}
+
+	template<class T>
+	T sum(Tensor<T, 1> const& t)
+	{
+		T sum = 0;
+		t.each([&](int i, T const& x) { sum += x; });
+		return sum;
+	}
+
+	//Mean block
+	template<class T>
+	T mean(Tensor<T, 1> const& t)
+	{
+		return sum(t) / t.shape()[0];
+	}
+
+	//Dot block
+	template<class T>
+	T dot(const Tensor<T, 1>& t1, const Tensor<T, 1>& t2)
+	{
+		assert(t1.shape() == t2.shape());
+		return sum(t1*t2);
+	}
+
+	//Transpose block
+	template<class T>
+	Tensor<T, 1> Transpose(Tensor<T, 1> const& input)
+	{
+		return input;
+	}
+
+	template<class T>
+	Tensor<T, 2> Transpose(Tensor<T, 2> const& input)
+	{
+		Shape<2> transposedShape = Shape<2>::transpose(input.shape());
+		Tensor<T, 2> transposed(transposedShape);
+		input.each([&](int i, Tensor<T, 1> const& subtensor)
+		{
+			subtensor.each([&](int j, T const& x)
+			{
+				transposed[j][i] = x;
+			});
+		});
+
+		return transposed;
+	}
+
+	
 }
