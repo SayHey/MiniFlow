@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <initializer_list>
+#include <cmath>
 
 namespace dynamictensor
 {
@@ -48,9 +49,9 @@ namespace dynamictensor
 		} //this name is not cool, come up with the new one
 
 		//Transpose shape
-		static Shape<2> transpose(Shape<2> const& shape)
+		Shape<2> transpose()
 		{
-			return Shape<2>{ shape.idx_[1], shape.idx_[0] };
+			return Shape<2>{ idx_[1], idx_[0] };
 		}
 
 		// Auxiliary operators
@@ -96,6 +97,8 @@ namespace dynamictensor
 		using SubTensor = typename std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type;
 		using type = T;
 
+	private:
+
 		std::vector<SubTensor> data_; // main memory structure
 		Shape<dim> shape_; // shape of tensor
 
@@ -121,19 +124,19 @@ namespace dynamictensor
 		}
 
 		template<typename F>
+		Tensor map(F fn) const
+		{
+			Tensor r(shape_);
+			r.each([&](int i, SubTensor& x) {x = fn(data_[i]); });
+			return r;
+		}
+
+		template<typename F>
 		static Tensor zip(Tensor const& t1, Tensor const& t2, F fn)
 		{
 			assert(t1.shape_ == t2.shape_);
 			Tensor r(t1.shape_);
 			r.each([&](int i, SubTensor& x) { x = fn(t1[i], t2[i]); });
-			return r;
-		}
-
-		template<typename F>
-		static Tensor map(Tensor const& t, F fn)
-		{
-			Tensor r(t.shape_);
-			r.each([&](int i, SubTensor& x) {x = fn(t[i]); });
 			return r;
 		}
 
@@ -275,7 +278,7 @@ namespace dynamictensor
 
 		friend Tensor operator-(Tensor const& t, Scalar s)
 		{
-			return map(t, [&](SubTensor x) {return x - s; });
+			return t.map([&](SubTensor x) {return x - s; });
 		}
 
 		friend Tensor operator-(Scalar s, Tensor const& t)
@@ -285,7 +288,7 @@ namespace dynamictensor
 
 		friend Tensor operator*(Tensor const& t, Scalar s)
 		{
-			return map(t, [&](SubTensor x) {return x * s; });
+			return t.map([&](SubTensor x) {return x * s; });
 		}
 
 		friend Tensor operator*(Scalar s, Tensor const& t)
@@ -295,7 +298,7 @@ namespace dynamictensor
 
 		friend Tensor operator/(Scalar s, Tensor const& t)
 		{
-			return map(t, [&](SubTensor x) {return s / x; });
+			return t.map([&](SubTensor x) {return s / x; });
 		}
 
 		friend Tensor operator/(Tensor const& t, Scalar s)
@@ -310,12 +313,36 @@ namespace dynamictensor
 		
 	};
 
+	template<class T, typename F, unsigned dim>
+	Tensor<T, dim> apply(const Tensor<T, dim>& t, F fn)
+	{
+		return t.map([&](Tensor<T, dim - 1> x) {return apply(x, fn); });
+	}
+
+	template<class T, typename F>
+	Tensor<T, 1> apply(const Tensor<T, 1>& t, F fn)
+	{
+		return t.map([&](Scalar x) {return fn(x); });
+	}
+
+	template<class T, typename F, unsigned dim>
+	Tensor<T, dim> fold(const Tensor<T, dim>& t, F fn)
+	{
+		return t.map([&](Tensor<T, dim - 1> x) {return apply(x, fn); });
+	}
+
+	template<class T, typename F>
+	Tensor<T, 1> fold(const Tensor<T, 1>& t, F fn)
+	{
+		return t.map([&](Scalar x) {return fn(x); });
+	}
+
 	// Math functions
 
 	template<class T, unsigned dim>
 	Tensor<T, dim> exp(const Tensor<T, dim>& t)
 	{
-		return map(t, [&](Scalar x) {return pow(EXP, x); });
+		return apply(t, [&](Scalar x) {return std::pow(EXP, x); });
 	}
 
 	template<class T, unsigned dim>
@@ -326,11 +353,37 @@ namespace dynamictensor
 
 	// Special functions
 
-	// now make above special functions tensorwide
+	//Transpose block
+	template<class T, unsigned dim>
+	Tensor<T, dim> transpose(Tensor<T, dim> const& input)
+	{
+		Tensor<T, 2> transposed(input.shape());
+		transposed.each([&](int i, Tensor<T, dim - 1>& x) {x = transpose(t[i]); });
+		return transposed;
+	}
 
-	//TODO
-	//..
+	template<class T>
+	Tensor<T, 2> transpose(Tensor<T, 2> const& input)
+	{
+		Shape<2> transposedShape = (input.shape().transpose());
+		Tensor<T, 2> transposed(transposedShape);
+		input.each([&](int i, Tensor<T, 1> const& subtensor)
+		{
+			subtensor.each([&](int j, T const& x)
+			{
+				transposed[j][i] = x;
+			});
+		});
 
+		return transposed;
+	}
+
+	template<class T>
+	Tensor<T, 1> transpose(Tensor<T, 1> const& input)
+	{
+		return input;
+	}
+	
 	//Sum block
 	template<class T, unsigned dim>
 	Tensor<T, dim-1> sum(Tensor<T, dim> const& t)
@@ -349,6 +402,14 @@ namespace dynamictensor
 	}
 
 	//Mean block
+	template<class T, unsigned dim>
+	Tensor<T, dim - 1> mean(Tensor<T, dim> const& t)
+	{
+		Tensor<T, dim - 1> r(t.shape().lcShape());
+		r.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& x) {x = mean(t[i]); });
+		return r;
+	}
+
 	template<class T>
 	T mean(Tensor<T, 1> const& t)
 	{
@@ -360,31 +421,10 @@ namespace dynamictensor
 	T dot(const Tensor<T, 1>& t1, const Tensor<T, 1>& t2)
 	{
 		assert(t1.shape() == t2.shape());
-		return sum(t1*t2);
+		return sum(t1*transpose(t2));
 	}
 
-	//Transpose block
-	template<class T>
-	Tensor<T, 1> Transpose(Tensor<T, 1> const& input)
-	{
-		return input;
-	}
-
-	template<class T>
-	Tensor<T, 2> Transpose(Tensor<T, 2> const& input)
-	{
-		Shape<2> transposedShape = Shape<2>::transpose(input.shape());
-		Tensor<T, 2> transposed(transposedShape);
-		input.each([&](int i, Tensor<T, 1> const& subtensor)
-		{
-			subtensor.each([&](int j, T const& x)
-			{
-				transposed[j][i] = x;
-			});
-		});
-
-		return transposed;
-	}
+	
 
 	
 }
