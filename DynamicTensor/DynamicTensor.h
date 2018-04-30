@@ -43,7 +43,7 @@ namespace dynamictensor
 		}
 
 		// Folds last dimention.
-		Shape<dim - 1> lcShape() const
+		Shape<dim - 1> foldShape() const
 		{
 			return convolutionShape(dim);
 		} //this name is not cool, come up with the new one
@@ -340,15 +340,15 @@ namespace dynamictensor
 	// Math functions
 
 	template<class T, unsigned dim>
-	Tensor<T, dim> exp(const Tensor<T, dim>& t)
+	Tensor<T, dim> exp(const Tensor<T, dim>& input)
 	{
-		return apply(t, [&](Scalar x) {return std::pow(EXP, x); });
+		return apply(input, [&](Scalar x) {return std::pow(EXP, x); });
 	}
 
 	template<class T, unsigned dim>
-	Tensor<T, dim> sqr(const Tensor<T, dim>& t)
+	Tensor<T, dim> sqr(const Tensor<T, dim>& input)
 	{
-		return t * t;
+		return input * input;
 	}
 
 	// Special functions
@@ -386,34 +386,34 @@ namespace dynamictensor
 	
 	//Sum block
 	template<class T, unsigned dim>
-	Tensor<T, dim-1> sum(Tensor<T, dim> const& t)
+	Tensor<T, dim-1> sum(Tensor<T, dim> const& input)
 	{
-		Tensor<T, dim - 1> r(t.shape().lcShape());
-		r.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& x) {x = sum(t[i]); });
-		return r;
+		Tensor<T, dim - 1> sumTensor(input.shape().foldShape());
+		sumTensor.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& subTensor) {subTensor = sum(input[i]); });
+		return sumTensor;
 	}
 
 	template<class T>
-	T sum(Tensor<T, 1> const& t)
+	T sum(Tensor<T, 1> const& input)
 	{
 		T sum = 0;
-		t.each([&](int i, T const& x) { sum += x; });
+		input.each([&](int i, T const& x) { sum += x; });
 		return sum;
 	}
 
 	//Mean block
 	template<class T, unsigned dim>
-	Tensor<T, dim - 1> mean(Tensor<T, dim> const& t)
+	Tensor<T, dim - 1> mean(Tensor<T, dim> const& input)
 	{
-		Tensor<T, dim - 1> r(t.shape().lcShape());
-		r.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& x) {x = mean(t[i]); });
-		return r;
+		Tensor<T, dim - 1> meanTensor(input.shape().foldShape());
+		meanTensor.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& subTensor) {subTensor = mean(input[i]); });
+		return meanTensor;
 	}
 
 	template<class T>
-	T mean(Tensor<T, 1> const& t)
+	T mean(Tensor<T, 1> const& input)
 	{
-		return sum(t) / t.shape()[0];
+		return sum(input) / input.shape()[0];
 	}
 
 	//Dot block
