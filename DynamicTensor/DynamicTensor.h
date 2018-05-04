@@ -418,13 +418,28 @@ namespace dynamictensor
 
 	//Dot block
 	template<class T>
+	Tensor<T, 2> dot(const Tensor<T, 2>& t1, const Tensor<T, 2>& t2)
+	{
+		assert(t1.shape()[1] == t2.shape()[0]);
+		Tensor<T, 2> t2transposed = transpose(t2);
+		Tensor<T, 2> result(Shape<2>{t1.shape()[0], t2.shape()[1]});
+		t1.each([&](int i, Tensor<T, 1> const& row) {result[i] = dot(t2transposed, row); });
+		return result;
+	}
+
+	template<class T>
+	Tensor<T, 1> dot(const Tensor<T, 2>& t1, const Tensor<T, 1>& t2)
+	{
+		assert(t1.shape()[1] == t2.shape()[0]);
+		Tensor<T, 1> result(Shape<1>{t1.shape()[0]});
+		t1.each([&](int i, Tensor<T, 1> const& row) {result[i] = dot(row, t2); });
+		return result;
+	}
+
+	template<class T>
 	T dot(const Tensor<T, 1>& t1, const Tensor<T, 1>& t2)
 	{
 		assert(t1.shape() == t2.shape());
-		return sum(t1*transpose(t2));
-	}
-
-	
-
-	
+		return sum(t1*t2);
+	}	
 }

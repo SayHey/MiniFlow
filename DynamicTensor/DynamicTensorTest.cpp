@@ -2,7 +2,7 @@
 
 int main()
 {
-	dynamictensor::Shape<1> shape1{ 4 };
+	dynamictensor::Shape<1> shape1{ 5 };
 	dynamictensor::Tensor<double, 1> tensor1(shape1, 3);
 
 	dynamictensor::Shape<2> shape2{ 4, 5 };
@@ -18,11 +18,11 @@ int main()
 
 	auto sum = dynamictensor::sum(tensor2);
 	auto mean = dynamictensor::mean(tensor2);
-	auto dot = dynamictensor::dot(tensor1, tensor1);
 	auto tensorT = dynamictensor::transpose(tensor2);
 
-	tensor2.print();
-	mean.print();
+	auto dot1 = dynamictensor::dot(tensor1, tensor1);
+	auto dot2 = dynamictensor::dot(tensor2, tensor1);
+	auto dot3 = dynamictensor::dot(tensorT, tensor2);
 
 	return 0;
 }
