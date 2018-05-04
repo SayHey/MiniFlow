@@ -365,8 +365,7 @@ namespace dynamictensor
 	template<class T>
 	Tensor<T, 2> transpose(Tensor<T, 2> const& input)
 	{
-		Shape<2> transposedShape = (input.shape().transpose());
-		Tensor<T, 2> transposed(transposedShape);
+		Tensor<T, 2> transposed(input.shape().transpose());
 		input.each([&](int i, Tensor<T, 1> const& subtensor)
 		{
 			subtensor.each([&](int j, T const& x)
@@ -422,7 +421,7 @@ namespace dynamictensor
 	{
 		assert(t1.shape()[1] == t2.shape()[0]);
 		Tensor<T, 2> t2transposed = transpose(t2);
-		Tensor<T, 2> result(Shape<2>{t1.shape()[0], t2.shape()[1]});
+		Tensor<T, 2> result({t1.shape()[0], t2.shape()[1]});
 		t1.each([&](int i, Tensor<T, 1> const& row) {result[i] = dot(t2transposed, row); });
 		return result;
 	}
@@ -431,7 +430,7 @@ namespace dynamictensor
 	Tensor<T, 1> dot(const Tensor<T, 2>& t1, const Tensor<T, 1>& t2)
 	{
 		assert(t1.shape()[1] == t2.shape()[0]);
-		Tensor<T, 1> result(Shape<1>{t1.shape()[0]});
+		Tensor<T, 1> result({t1.shape()[0]});
 		t1.each([&](int i, Tensor<T, 1> const& row) {result[i] = dot(row, t2); });
 		return result;
 	}
