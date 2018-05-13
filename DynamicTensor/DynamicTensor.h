@@ -125,24 +125,7 @@ namespace dynamictensor
 				fn(i, data_[i]);
 			}
 		}
-
-		//
-		template<typename F>
-		void apply(F fnVector, F fnTensor) const
-		{
-			// note that if statement contains a compile-time constant.
-			// only correct branch will be included in the final executable code
-			if constexpr(is_vector_)
-			{
-				static_assert(std::is_same<SubTensor, T>(), "Error in vector branching");
-				return fnVector(*this);
-			}
-			else
-			{
-				return fnTensor(*this);
-			}
-		}
-		
+				
 		//
 		template<typename F>
 		Tensor map(F fn) const
@@ -230,22 +213,20 @@ namespace dynamictensor
 		// Prints tensor in console		
 		void print(int level = 0) const
 		{
+			for (int i = 0; i <= level; i++) std::cout << " ";
+			std::cout << "{";
+
 			if constexpr(is_vector_) // prints vector in console
 			{
-				for (int i = 0; i <= level; i++) std::cout << " ";
-				std::cout << "{ ";
 				for (int i = 0; i < data_.size() - 1; i++)
 				{
-
 					std::cout << data_[i] << ", ";
 				}
 				std::cout << data_.back();
-				std::cout << " }";
 			}
 			else // general print branch for non-vector tensor
 			{
-				for (int i = 0; i <= level; i++) std::cout << " ";
-				std::cout << "{" << std::endl;
+				std::cout << std::endl;
 				for (int i = 0; i < data_.size() - 1; i++)
 				{
 					data_[i].print(level + 1);
@@ -254,9 +235,9 @@ namespace dynamictensor
 				data_.back().print(level + 1);
 				std::cout << std::endl;
 				for (int i = 0; i <= level; i++) std::cout << " ";
-				std::cout << "}";
 			}		
 
+			std::cout << " }";
 			if(level == 0) std::cin.get();
 		}
 
