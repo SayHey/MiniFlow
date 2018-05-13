@@ -94,8 +94,8 @@ namespace dynamictensor
 
 		// Tempalte statics
 		static const unsigned dim_ = dim;
-		using SubTensor = typename std::conditional<dim == 1, T, Tensor<T, dim - 1>>::type;
-		using type = T;
+		static const bool is_vector_ = dim_ == 1;
+		using SubTensor = typename std::conditional<is_vector_, T, Tensor<T, dim - 1>>::type;
 
 	private:
 
@@ -105,6 +105,8 @@ namespace dynamictensor
 	public:
 
 		// Internal logic
+
+		//
 		template<typename F>
 		void each(F fn)
 		{
@@ -114,6 +116,7 @@ namespace dynamictensor
 			}
 		}
 
+		//
 		template<typename F>
 		void each(F fn) const
 		{
@@ -123,6 +126,24 @@ namespace dynamictensor
 			}
 		}
 
+		//
+		template<typename F>
+		void apply(F fnVector, F fnTensor) const
+		{
+			// note that if statement contains a compile-time constant.
+			// only correct branch will be included in the final executable code
+			if constexpr(is_vector_)
+			{
+				static_assert(std::is_same<SubTensor, T>(), "Error in vector branching");
+				return fnVector(*this);
+			}
+			else
+			{
+				return fnTensor(*this);
+			}
+		}
+		
+		//
 		template<typename F>
 		Tensor map(F fn) const
 		{
@@ -131,6 +152,24 @@ namespace dynamictensor
 			return r;
 		}
 
+		//
+		template<typename F>
+		Tensor map_all(F fn) const
+		{
+			// note that if statement contains a compile-time constant.
+			// only correct branch will be included in the final executable code
+			if constexpr(is_vector_)
+			{
+				static_assert(std::is_same<SubTensor, T>(), "Error in vector branching");
+				return map([&](T const& x) {return fn(x); });
+			}
+			else
+			{
+				return map([&](SubTensor const& subTensor) {return subTensor.map_all(fn); });
+			}
+		}
+		
+		//
 		template<typename F>
 		static Tensor zip(Tensor const& t1, Tensor const& t2, F fn)
 		{
@@ -140,17 +179,21 @@ namespace dynamictensor
 			return r;
 		}
 
+		
+		//template<class T, typename F, unsigned dim>
+		//static Tensor<T, dim> fold(const Tensor<T, dim>& t, F fn) {}
+
 	public:
 
 		// Initialize empty tensor
 		Tensor() : Tensor(Shape<dim>()) {}
 
 		// Initialize tensor of given shape
-		Tensor(Shape<dim> shape) : Tensor(shape, 0) {}
+		Tensor(Shape<dim> const& shape) : Tensor(shape, 0) {}
 
 		// Initialize tensor of given shape filled with value
 		template<unsigned dim>
-		Tensor(Shape<dim> shape, T value) : shape_(shape)
+		Tensor(Shape<dim> const& shape, T value) : shape_(shape)
 		{
 			data_.resize(shape[0]);
 			for (auto& subTensor : data_)
@@ -161,7 +204,7 @@ namespace dynamictensor
 
 		// Initialize vector of given shape filled with value
 		template<>
-		Tensor(Shape<1> shape, T value) : shape_(shape)
+		Tensor(Shape<1> const& shape, T value) : shape_(shape)
 		{
 			data_.resize(shape[0], value);
 		}
@@ -184,42 +227,37 @@ namespace dynamictensor
 			return shape_;
 		}
 
-		// Prints tensor in console
-		void print() const
-		{
-			print<dim>();
-			std::cin.get();
-		}
-
-		template<unsigned dim>
+		// Prints tensor in console		
 		void print(int level = 0) const
 		{
-			for (int i = 0; i <= level; i++) std::cout << " ";
-			std::cout << "{" << std::endl;
-			for (int i = 0; i < data_.size() - 1; i++)
+			if constexpr(is_vector_) // prints vector in console
 			{
-				data_[i].print<dim - 1>(level + 1);
-				std::cout << "," << std::endl;
-			}
-			data_.back().print<dim - 1>(level + 1);
-			std::cout << std::endl;
-			for (int i = 0; i <= level; i++) std::cout << " ";
-			std::cout << "}";
-		}
+				for (int i = 0; i <= level; i++) std::cout << " ";
+				std::cout << "{ ";
+				for (int i = 0; i < data_.size() - 1; i++)
+				{
 
-		// Prints vector in console
-		template<>
-		void print<1>(int level) const
-		{
-			for (int i = 0; i <= level; i++) std::cout << " ";
-			std::cout << "{ ";
-			for (int i = 0; i < data_.size() - 1; i++)
+					std::cout << data_[i] << ", ";
+				}
+				std::cout << data_.back();
+				std::cout << " }";
+			}
+			else // general print branch for non-vector tensor
 			{
+				for (int i = 0; i <= level; i++) std::cout << " ";
+				std::cout << "{" << std::endl;
+				for (int i = 0; i < data_.size() - 1; i++)
+				{
+					data_[i].print(level + 1);
+					std::cout << "," << std::endl;
+				}
+				data_.back().print(level + 1);
+				std::cout << std::endl;
+				for (int i = 0; i <= level; i++) std::cout << " ";
+				std::cout << "}";
+			}		
 
-				std::cout << data_[i] << ", ";
-			}
-			std::cout << data_.back();
-			std::cout << " }";
+			if(level == 0) std::cin.get();
 		}
 
 		// Element-wise tensor operations
@@ -244,22 +282,22 @@ namespace dynamictensor
 			return zip(t1, t2, [](SubTensor x1, SubTensor x2) {return x1 / x2; });
 		}
 
-		void operator+=(const Tensor& t)
+		void operator+=(Tensor const& t)
 		{
 			*this = *this + t;
 		}
 
-		void operator-=(const Tensor& t)
+		void operator-=(Tensor const& t)
 		{
 			*this = *this - t;
 		}
 
-		void operator*=(const Tensor& t)
+		void operator*=(Tensor const& t)
 		{
 			*this = *this * t;
 		}
 
-		void operator/=(const Tensor& t)
+		void operator/=(Tensor const& t)
 		{
 			*this = *this / t;
 		}
@@ -310,46 +348,20 @@ namespace dynamictensor
 		{
 			return t * -1;
 		}
+
+		// Math functions
+
+		friend Tensor exp(Tensor const& input)
+		{
+			return input.map_all([&](Scalar x) {return std::pow(EXP, x); });
+		}
+
+		friend Tensor sqr(Tensor const& input)
+		{
+			return input * input;
+		}
 		
 	};
-
-	template<class T, typename F, unsigned dim>
-	Tensor<T, dim> apply(const Tensor<T, dim>& t, F fn)
-	{
-		return t.map([&](Tensor<T, dim - 1> x) {return apply(x, fn); });
-	}
-
-	template<class T, typename F>
-	Tensor<T, 1> apply(const Tensor<T, 1>& t, F fn)
-	{
-		return t.map([&](Scalar x) {return fn(x); });
-	}
-
-	template<class T, typename F, unsigned dim>
-	Tensor<T, dim> fold(const Tensor<T, dim>& t, F fn)
-	{
-		return t.map([&](Tensor<T, dim - 1> x) {return apply(x, fn); });
-	}
-
-	template<class T, typename F>
-	Tensor<T, 1> fold(const Tensor<T, 1>& t, F fn)
-	{
-		return t.map([&](Scalar x) {return fn(x); });
-	}
-
-	// Math functions
-
-	template<class T, unsigned dim>
-	Tensor<T, dim> exp(const Tensor<T, dim>& input)
-	{
-		return apply(input, [&](Scalar x) {return std::pow(EXP, x); });
-	}
-
-	template<class T, unsigned dim>
-	Tensor<T, dim> sqr(const Tensor<T, dim>& input)
-	{
-		return input * input;
-	}
 
 	// Special functions
 
