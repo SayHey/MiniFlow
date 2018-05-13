@@ -1,0 +1,1 @@
+<Playlist Version="1.0"><Add Test="MiniFlowTest::DynamicTensorTest::MeanTest" /><Add Test="MiniFlowTest::DynamicTensorTest::TensorMath" /><Add Test="MiniFlowTest::DynamicTensorTest::TensorArithmetics" /><Add Test="MiniFlowTest::DynamicTensorTest::SumTest" /><Add Test="MiniFlowTest::DynamicTensorTest::DotTest" /></Playlist>
