@@ -41,28 +41,27 @@ public:
 		Assert::AreEqual(tensorSQR[0][0], 9);
 	}
 
-	TEST_METHOD(SumTest)
-	{
-		dynamictensor::Shape<2> shape{ 2, 5 };
-		dynamictensor::Tensor<int, 2> tensor(shape, 2);
-		tensor[0][0] = 1;
-
-		dynamictensor::Tensor<int, 1> sum = dynamictensor::sum(tensor); //
-
-		Assert::AreEqual(sum[0], 9);
-		Assert::AreEqual(sum[1], 10);
-	}
-
 	TEST_METHOD(MeanTest)
 	{
 		dynamictensor::Shape<2> shape{ 2, 5 };
 		dynamictensor::Tensor<int, 2> tensor(shape, 2);
 		tensor[1][1] = 7;
 
-		dynamictensor::Tensor<int, 1> mean = dynamictensor::mean(tensor); //
+		dynamictensor::Tensor<int, 1> m = mean(tensor); //
 
-		Assert::AreEqual(mean[0], 2);
-		Assert::AreEqual(mean[1], 3);
+		Assert::AreEqual(m[0], 2);
+		Assert::AreEqual(m[1], 3);
+	}
+
+	TEST_METHOD(Transpose)
+	{
+		dynamictensor::Shape<2> shape{ 2, 5 };
+		dynamictensor::Tensor<int, 2> tensor(shape, 2);
+		tensor[1][3] = 7;
+
+		dynamictensor::Tensor<int, 2> transposed = transpose(tensor); //
+
+		Assert::AreEqual(transposed[3][1], 7);
 	}
 
 	TEST_METHOD(DotTest)

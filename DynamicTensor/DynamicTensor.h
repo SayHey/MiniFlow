@@ -20,38 +20,45 @@ namespace dynamictensor
 
 		Index idx_[dim];
 		static const unsigned dim_ = dim;
+		using SubShape = typename std::conditional<dim == 1, int, Shape<dim-1>>::type;
 
 		// Shape convolution returns dim - 1 fold of
 		// original shape without k's dimention.
-		Shape<dim - 1> convolutionShape(int k) const
+		SubShape convolutionShape(int k) const
 		{
-			Shape<dim - 1> subshape;
-			for (int i = 0; i < dim - 1; i++)
+			if constexpr (dim == 1) return 0;
+			else
 			{
-				int j = (i < k) ? i : i + 1;
-				subshape[i] = idx_[j];
-			}
-			return subshape;
+				SubShape subshape;
+				for (int i = 0; i < dim - 1; i++)
+				{
+					int j = (i < k) ? i : i + 1;
+					subshape[i] = idx_[j];
+				}
+				return subshape;
+			}			
 		}
 
 		// Folds first dimention.
 		// This is the shape of subtensor of 
 		// a tensor of given shape.
-		Shape<dim - 1> subShape() const
+		SubShape subShape() const
 		{
 			return convolutionShape(0);
 		}
 
 		// Folds last dimention.
-		Shape<dim - 1> foldShape() const
+		SubShape foldShape() const
 		{
 			return convolutionShape(dim);
-		} //this name is not cool, come up with the new one
+		}
 
 		//Transpose shape
-		Shape<2> transpose()
+		Shape transpose()
 		{
-			return Shape<2>{ idx_[1], idx_[0] };
+			Shape transposed_shape = *this;
+			std::swap(transposed_shape.idx_[dim - 1], transposed_shape.idx_[dim - 2]);
+			return transposed_shape;
 		}
 
 		// Auxiliary operators
@@ -85,24 +92,20 @@ namespace dynamictensor
 	{
 		/*
 			Represents an n-dimensional array of values.
-			Stored as std::vector of vectors,
-			whose shape is dynamic and allocated in realtime.
+			Stored as std::vector of vectors, whose shape is dynamic and allocated in realtime.
 			Only dimention of tensor is static.
 		*/
 
 	public:
 
 		// Tempalte statics
-		static const unsigned dim_ = dim;
-		static const bool is_vector_ = dim_ == 1;
+		static constexpr unsigned dim_ = dim;
+		static constexpr bool is_vector_ = dim_ == 1;
+		static constexpr bool is_matrix_ = dim_ == 2;
 		using SubTensor = typename std::conditional<is_vector_, T, Tensor<T, dim - 1>>::type;
-
-	private:
 
 		std::vector<SubTensor> data_; // main memory structure
 		Shape<dim> shape_; // shape of tensor
-
-	public:
 
 		// Internal logic
 
@@ -125,7 +128,7 @@ namespace dynamictensor
 				fn(i, data_[i]);
 			}
 		}
-				
+		
 		//
 		template<typename F>
 		Tensor map(F fn) const
@@ -139,8 +142,9 @@ namespace dynamictensor
 		template<typename F>
 		Tensor map_all(F fn) const
 		{
-			// note that if statement contains a compile-time constant.
-			// only correct branch will be included in the final executable code
+			// This is a workaround for the inability to partial specialize member functions.
+			// Note that if statement contains a compile-time constant.
+			// Only correct branch will be included in the final executable code
 			if constexpr(is_vector_)
 			{
 				static_assert(std::is_same<SubTensor, T>(), "Error in vector branching");
@@ -151,7 +155,7 @@ namespace dynamictensor
 				return map([&](SubTensor const& subTensor) {return subTensor.map_all(fn); });
 			}
 		}
-		
+
 		//
 		template<typename F>
 		static Tensor zip(Tensor const& t1, Tensor const& t2, F fn)
@@ -162,7 +166,7 @@ namespace dynamictensor
 			return r;
 		}
 
-		
+
 		//template<class T, typename F, unsigned dim>
 		//static Tensor<T, dim> fold(const Tensor<T, dim>& t, F fn) {}
 
@@ -193,13 +197,13 @@ namespace dynamictensor
 		}
 
 		// Access operator const
-		SubTensor operator [](Index i) const
+		SubTensor operator[](Index i) const
 		{
 			return data_[i];
 		}
 
 		// Access operator nonconst
-		SubTensor& operator [](Index i)
+		SubTensor& operator[](Index i)
 		{
 			return data_[i];
 		}
@@ -235,10 +239,10 @@ namespace dynamictensor
 				data_.back().print(level + 1);
 				std::cout << std::endl;
 				for (int i = 0; i <= level; i++) std::cout << " ";
-			}		
+			}
 
 			std::cout << " }";
-			if(level == 0) std::cin.get();
+			if (level == 0) std::cin.get();
 		}
 
 		// Element-wise tensor operations
@@ -341,97 +345,96 @@ namespace dynamictensor
 		{
 			return input * input;
 		}
-		
-	};
 
-	// Special functions
+		// Special functions
 
-	//Transpose block
-	template<class T, unsigned dim>
-	Tensor<T, dim> transpose(Tensor<T, dim> const& input)
-	{
-		Tensor<T, 2> transposed(input.shape());
-		transposed.each([&](int i, Tensor<T, dim - 1>& x) {x = transpose(t[i]); });
-		return transposed;
-	}
-
-	template<class T>
-	Tensor<T, 2> transpose(Tensor<T, 2> const& input)
-	{
-		Tensor<T, 2> transposed(input.shape().transpose());
-		input.each([&](int i, Tensor<T, 1> const& subtensor)
+		friend Tensor transpose(Tensor const& input)
 		{
-			subtensor.each([&](int j, T const& x)
+			if constexpr(input.is_vector_) return input;
+			Tensor transposed(input.shape().transpose());
+			if constexpr(input.is_matrix_)
 			{
-				transposed[j][i] = x;
-			});
-		});
+				input.each([&](int i, Tensor<T, 1> const& subtensor)
+				{
+					subtensor.each([&](int j, T const& x)
+					{
+						transposed[j][i] = x;
+					});
+				});
+			}
+			else
+			{
+				transposed.each([&](int i, Tensor<T, dim - 1>& x) 
+				{
+					x = transpose(t[i]); 
+				});
+			}
+			return transposed;
+		}
 
-		return transposed;
-	}
+		friend SubTensor sum(Tensor const& input)
+		{
+			SubTensor sumTensor(input.shape().foldShape());
+			if constexpr(input.is_vector_)
+			{				
+				input.each([&](int i, T const& x) 
+				{ 
+					sumTensor += x; 
+				});
+			}
+			else
+			{
+				sumTensor.each([&](int i, typename SubTensor::SubTensor& subTensor) 
+				{
+					subTensor = sum(input[i]); 
+				});
+			}
+			return sumTensor;
+		}
 
-	template<class T>
-	Tensor<T, 1> transpose(Tensor<T, 1> const& input)
-	{
-		return input;
-	}
-	
-	//Sum block
-	template<class T, unsigned dim>
-	Tensor<T, dim-1> sum(Tensor<T, dim> const& input)
-	{
-		Tensor<T, dim - 1> sumTensor(input.shape().foldShape());
-		sumTensor.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& subTensor) {subTensor = sum(input[i]); });
-		return sumTensor;
-	}
+		friend SubTensor mean(Tensor const& input)
+		{
+			SubTensor meanTensor(input.shape().foldShape());
+			if constexpr(input.is_vector_)
+			{
+				return sum(input) / input.shape()[0];
+			}
+			else
+			{
+				meanTensor.each([&](int i, typename SubTensor::SubTensor& subTensor) 
+				{
+					subTensor = mean(input[i]); 
+				});
+			}
+			return meanTensor;
+		}
 
-	template<class T>
-	T sum(Tensor<T, 1> const& input)
-	{
-		T sum = 0;
-		input.each([&](int i, T const& x) { sum += x; });
-		return sum;
-	}
+		//Dot block
+		using DotType = typename std::conditional<dim == 1, T, Tensor>::type;
 
-	//Mean block
-	template<class T, unsigned dim>
-	Tensor<T, dim - 1> mean(Tensor<T, dim> const& input)
-	{
-		Tensor<T, dim - 1> meanTensor(input.shape().foldShape());
-		meanTensor.each([&](int i, typename Tensor<T, dim - 1>::SubTensor& subTensor) {subTensor = mean(input[i]); });
-		return meanTensor;
-	}
+		friend DotType dot(const Tensor& t1, const Tensor& t2)
+		{
+			if constexpr(t1.is_vector_)
+			{
+				assert(t1.shape() == t2.shape());
+				return sum(t1*t2);
+			}
+			else
+			{
+				assert(t1.shape()[1] == t2.shape()[0]);
+				Tensor<T, 2> t2transposed = transpose(t2);
+				Tensor<T, 2> result({ t1.shape()[0], t2.shape()[1] });
+				t1.each([&](int i, Tensor<T, 1> const& row) {result[i] = dot(t2transposed, row); });
+				return result;
+			}			
+		}
 
-	template<class T>
-	T mean(Tensor<T, 1> const& input)
-	{
-		return sum(input) / input.shape()[0];
-	}
-
-	//Dot block
-	template<class T>
-	Tensor<T, 2> dot(const Tensor<T, 2>& t1, const Tensor<T, 2>& t2)
-	{
-		assert(t1.shape()[1] == t2.shape()[0]);
-		Tensor<T, 2> t2transposed = transpose(t2);
-		Tensor<T, 2> result({t1.shape()[0], t2.shape()[1]});
-		t1.each([&](int i, Tensor<T, 1> const& row) {result[i] = dot(t2transposed, row); });
-		return result;
-	}
-
-	template<class T>
-	Tensor<T, 1> dot(const Tensor<T, 2>& t1, const Tensor<T, 1>& t2)
-	{
-		assert(t1.shape()[1] == t2.shape()[0]);
-		Tensor<T, 1> result({t1.shape()[0]});
-		t1.each([&](int i, Tensor<T, 1> const& row) {result[i] = dot(row, t2); });
-		return result;
-	}
-
-	template<class T>
-	T dot(const Tensor<T, 1>& t1, const Tensor<T, 1>& t2)
-	{
-		assert(t1.shape() == t2.shape());
-		return sum(t1*t2);
-	}	
+		friend Tensor dot(const Tensor<T, dim + 1>& t1, const Tensor& t2)
+		{
+			assert(t1.shape()[1] == t2.shape()[0]);
+			Tensor<T, 1> result({ t1.shape()[0] });
+			t1.each([&](int i, Tensor const& row) {result[i] = dot(row, t2); });
+			return result;
+		}
+	};
 }

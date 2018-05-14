@@ -13,6 +13,11 @@ namespace statictensor
 	template<class T, unsigned dim, unsigned ... dims >
 	class TensorBase<T, dim, dims...>
 	{
+		/*
+		Represents an n-dimensional array of values.
+		Stored as array of arrays, whose shape is static and allocated in compiletime.
+		*/
+
 		typedef TensorBase<T, dims...> SubTensor;
 		SubTensor data_[dim];
 

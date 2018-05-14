@@ -10,13 +10,13 @@ int main()
 	dynamictensor::Tensor<double, 3> tensor3(shape3, 3);
 	dynamictensor::Tensor<double, 3> tensor4(shape3, 2);
 
-	auto sum = dynamictensor::sum(tensor2);
-	auto mean = dynamictensor::mean(tensor2);
-	auto tensorT = dynamictensor::transpose(tensor2);
+	auto s = sum(tensor2);
+	auto m = mean(tensor2);
+	auto tensorT = transpose(tensor2);
 
-	auto dot1 = dynamictensor::dot(tensor1, tensor1);
-	auto dot2 = dynamictensor::dot(tensor2, tensor1);
-	auto dot3 = dynamictensor::dot(tensorT, tensor2);
+	auto dot1 = dot(tensor1, tensor1);
+	auto dot2 = dot(tensor2, tensor1);
+	//auto dot3 = dynamictensor::dot(tensorT, tensor2);
 
 	tensor3.print();
 
