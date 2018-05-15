@@ -8,7 +8,7 @@
 
 namespace dynamictensor
 {
-	typedef std::size_t Index;
+	typedef size_t Index;
 	typedef double Scalar;
 	Scalar EXP = 2.71828182845904523536;
 
@@ -19,7 +19,7 @@ namespace dynamictensor
 		*/
 
 		Index idx_[dim];
-		static const unsigned dim_ = dim;
+		static constexpr unsigned dim_ = dim;
 		using SubShape = typename std::conditional<dim == 1, int, Shape<dim-1>>::type;
 
 		// Shape convolution returns dim - 1 fold of
@@ -88,7 +88,8 @@ namespace dynamictensor
 		}
 	};
 
-	template<class T, unsigned dim> class Tensor
+	template<class T, unsigned dim> 
+	class Tensor
 	{
 		/*
 			Represents an n-dimensional array of values.
@@ -165,11 +166,11 @@ namespace dynamictensor
 			r.each([&](int i, SubTensor& x) { x = fn(t1[i], t2[i]); });
 			return r;
 		}
-
-
+		
+		//
 		//template<class T, typename F, unsigned dim>
 		//static Tensor<T, dim> fold(const Tensor<T, dim>& t, F fn) {}
-
+			
 	public:
 
 		// Initialize empty tensor
@@ -364,9 +365,9 @@ namespace dynamictensor
 			}
 			else
 			{
-				transposed.each([&](int i, Tensor<T, dim - 1>& x) 
+				transposed.each([&](int i, SubTensor& x) 
 				{
-					x = transpose(t[i]); 
+					x = transpose(input.data_[i]);
 				});
 			}
 			return transposed;
@@ -393,23 +394,24 @@ namespace dynamictensor
 		}
 
 		friend SubTensor mean(Tensor const& input)
-		{
-			SubTensor meanTensor(input.shape().foldShape());
+		{			
 			if constexpr(input.is_vector_)
 			{
 				return sum(input) / input.shape()[0];
 			}
 			else
 			{
+				SubTensor meanTensor(input.shape().foldShape());
 				meanTensor.each([&](int i, typename SubTensor::SubTensor& subTensor) 
 				{
 					subTensor = mean(input[i]); 
 				});
-			}
-			return meanTensor;
+				return meanTensor;
+			}			
 		}
 
-		//Dot block
+		// Dot
+
 		using DotType = typename std::conditional<dim == 1, T, Tensor>::type;
 
 		friend DotType dot(const Tensor& t1, const Tensor& t2)
