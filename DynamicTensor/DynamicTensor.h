@@ -439,4 +439,4 @@ namespace dynamictensor
 			return result;
 		}
 	};
-}
+} //namespace dynamictensor

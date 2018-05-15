@@ -16,7 +16,7 @@ int main()
 
 	auto dot1 = dot(tensor1, tensor1);
 	auto dot2 = dot(tensor2, tensor1);
-	//auto dot3 = dynamictensor::dot(tensorT, tensor2);
+	auto dot3 = dot(tensorT, tensor2);
 
 	tensor3.print();
 

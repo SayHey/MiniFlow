@@ -55,13 +55,13 @@ public:
 
 	TEST_METHOD(Transpose)
 	{
-		dynamictensor::Shape<2> shape{ 2, 5 };
-		dynamictensor::Tensor<int, 2> tensor(shape, 2);
-		tensor[1][3] = 7;
+		dynamictensor::Shape<3> shape{ 3, 2, 5 };
+		dynamictensor::Tensor<int, 3> tensor(shape, 2);
+		tensor[0][1][3] = 7;
 
-		dynamictensor::Tensor<int, 2> transposed = transpose(tensor); //
+		dynamictensor::Tensor<int, 3> transposed = transpose(tensor); //
 
-		Assert::AreEqual(transposed[3][1], 7);
+		Assert::AreEqual(transposed[0][3][1], 7);
 	}
 
 	TEST_METHOD(DotTest)
