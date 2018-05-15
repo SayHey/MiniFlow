@@ -1,8 +1,5 @@
 #pragma once
 
-#include <list>
-#include <vector>
-#include <queue>
 #include <boost/range/adaptor/reversed.hpp>
 
 #include "Node.h"

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector>
-
 #include "Common.h"
 #include "Tensor.h"
 
 namespace miniflow
 {
+	using placeholder::Tensor;
+
 	class Node
 	{
 		/*

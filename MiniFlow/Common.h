@@ -1,5 +1,12 @@
 #pragma once
 
+#include <cassert>
+#include <iostream>
+#include <vector>
+#include <list>
+#include <initializer_list>
+#include <cmath>
+
 namespace miniflow
 {
 	// Typedefs:

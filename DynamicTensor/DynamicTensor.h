@@ -1,16 +1,12 @@
 #pragma once
 
-#include <cassert>
-#include <iostream>
-#include <vector>
-#include <initializer_list>
-#include <cmath>
+#include "../MiniFlow/Common.h"
 
 namespace dynamictensor
 {
-	typedef size_t Index;
-	typedef double Scalar;
-	Scalar EXP = 2.71828182845904523536;
+	using miniflow::Scalar;
+	using miniflow::Index;
+	using miniflow::EXP;
 
 	template<unsigned dim> struct Shape
 	{
