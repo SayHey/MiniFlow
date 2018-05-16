@@ -6,6 +6,7 @@
 #include <list>
 #include <initializer_list>
 #include <cmath>
+#include <numeric>
 
 namespace miniflow
 {

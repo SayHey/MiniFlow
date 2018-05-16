@@ -7,54 +7,50 @@
 
 namespace statictensor
 {
-	template<class T, unsigned ... dims> 
-	class TensorBase;
-
-	template<class T, unsigned dim, unsigned ... dims >
-	class TensorBase<T, dim, dims...>
+	template<typename TensorContainer>
+	class TensorImp
 	{
 		/*
 		Represents an n-dimensional array of values.
-		Stored as array of arrays, whose shape is static and allocated in compiletime.
+		Stored as array of arrays wath a static shape allocated in compiletime.
 		*/
 
-		typedef TensorBase<T, dims...> SubTensor;
-		SubTensor data_[dim];
+		using SubTensor = typename TensorContainer::SubTensor;
+		SubTensor data_[TensorContainer::dim_];
 
 	public:
 
-		TensorBase()
-		{}
-		
-		TensorBase(std::initializer_list<SubTensor> const& il)
+		TensorImp() = default;
+
+		TensorImp(std::initializer_list<SubTensor> const& il)
 		{
 			std::copy(il.begin(), il.end(), data_);
 		}
 
-		SubTensor& operator[](unsigned i) 
-		{ 
-			return data_[i]; 
+		SubTensor& operator[](unsigned i)
+		{
+			return data_[i];
 		}
 	};
 
-	template<class T, unsigned dim>
-	class TensorBase<T, dim>
+	template<typename T, unsigned ... dims>
+	struct TensorContainer;
+
+	template<typename T, unsigned ... dims>
+	using Tensor = TensorImp<TensorContainer<T, dims...>>;
+
+	template<typename T, unsigned dim, unsigned ... dims >
+	struct TensorContainer<T, dim, dims...>
 	{
-		T data_[dim];
+		static const unsigned dim_ = dim;
+		using SubTensor = Tensor<T, dims...>;
+		
+	};
 
-	public:
-
-		TensorBase()
-		{}
-
-		TensorBase(std::initializer_list<T> const& il)
-		{
-			std::copy(il.begin(), il.end(), data_);
-		}
-
-		T& operator[](unsigned i) 
-		{ 
-			return data_[i]; 
-		}
+	template<typename T, unsigned dim>
+	struct TensorContainer<T, dim>
+	{
+		static const unsigned dim_ = dim;
+		using SubTensor = T;
 	};
 }

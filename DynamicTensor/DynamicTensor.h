@@ -89,7 +89,7 @@ namespace dynamictensor
 	{
 		/*
 			Represents an n-dimensional array of values.
-			Stored as std::vector of vectors, whose shape is dynamic and allocated in realtime.
+			Stored as std::vector of vectors with a dynamic shape allocated in runtime.
 			Only dimention of tensor is static.
 		*/
 
@@ -227,14 +227,14 @@ namespace dynamictensor
 			}
 			else // general print branch for non-vector tensor
 			{
-				std::cout << std::endl;
+				std::cout << '\n';
 				for (int i = 0; i < data_.size() - 1; i++)
 				{
 					data_[i].print(level + 1);
-					std::cout << "," << std::endl;
+					std::cout << "," << '\n';
 				}
 				data_.back().print(level + 1);
-				std::cout << std::endl;
+				std::cout << '\n';
 				for (int i = 0; i <= level; i++) std::cout << " ";
 			}
 
@@ -373,11 +373,8 @@ namespace dynamictensor
 		{
 			SubTensor sumTensor(input.shape().foldShape());
 			if constexpr(input.is_vector_)
-			{				
-				input.each([&](int i, T const& x) 
-				{ 
-					sumTensor += x; 
-				});
+			{	
+				sumTensor = std::accumulate(input.data_.begin(), input.data_.end(), 0.0);
 			}
 			else
 			{
