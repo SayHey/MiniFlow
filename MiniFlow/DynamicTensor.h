@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../MiniFlow/Common.h"
+#include "Common.h"
 
 namespace dynamictensor
 {
+	using miniflow::iterate;
 	using miniflow::Scalar;
 	using miniflow::Index;
 	using miniflow::EXP;
@@ -110,10 +111,10 @@ namespace dynamictensor
 		template<typename F>
 		void each(F fn)
 		{
-			for (int i = 0; i < shape_[0]; i++)
+			iterate(Index(0), shape_[0], [&](Index i)
 			{
 				fn(i, data_[i]);
-			}
+			});
 		}
 
 		//

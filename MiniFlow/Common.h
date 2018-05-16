@@ -8,7 +8,7 @@
 #include <cmath>
 #include <numeric>
 #include <execution>
-#include <algorithm>
+//#include <algorithm>
 
 namespace miniflow
 {
@@ -22,13 +22,9 @@ namespace miniflow
 	template<typename Iter, typename F>
 	void iterateParallel(Iter begin, Iter end, F fn)
 	{
-		std::for_each(
-			std::execution::par_unseq,
-			foo.begin(),
-			foo.end(),
-			[](auto&& item)
+		std::for_each(std::execution::par_unseq, begin, end, [&](auto&& item)
 		{
-			fn(it);
+			fn(item);
 		});
 	}
 
@@ -44,6 +40,6 @@ namespace miniflow
 	template<typename Iter, typename F>
 	void iterate(Iter begin, Iter end, F fn)
 	{
-		iterateParallel(begin, end, fn);
+		iterateSerial(begin, end, fn);
 	}
 }

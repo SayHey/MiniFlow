@@ -4,8 +4,65 @@
 
 #include "../MiniFlow/DynamicTensor.h"
 #include "../MiniFlow/StaticTensor.h"
+#include "../MiniFlow/Node.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+
+TEST_CLASS(BasicNodeTest)
+{
+	using Tensor = miniflow::TensorScalar;
+	static constexpr double eps = 1e-10;
+
+public:
+
+	TEST_METHOD(InputNodeTest)
+	{
+		miniflow::Input<Tensor> X(0.2);
+		X.forward();
+		X.backward();
+		X.update(1.);
+		Assert::AreEqual(X.is_input(), true);
+		Assert::AreEqual(X.getValue().value_, 0.2);
+		Assert::AreEqual(X.getGradient()[0].value_, 0.);
+		Assert::AreEqual(X.inbound_nodes().size(), size_t(0));
+	}
+
+	TEST_METHOD(TrainableNodeTest)
+	{
+		miniflow::Trainable<Tensor> W(0.1);
+		W.forward();
+		W.backward();
+		W.update(1.);
+		Assert::AreEqual(W.is_input(), true);
+		Assert::AreEqual(W.getValue().value_, 0.1);
+		Assert::AreEqual(W.getGradient()[0].value_, 0.);
+		Assert::AreEqual(W.inbound_nodes().size(), size_t(0));
+	}
+
+	TEST_METHOD(LinearNodeTest)
+	{
+		miniflow::Input<Tensor> X(0.2);
+		miniflow::Trainable<Tensor> W(0.1), b(0);
+		miniflow::Linear<Tensor> L(X, W, b);
+	}
+
+	TEST_METHOD(SigmoidNodeTest)
+	{
+		miniflow::Input<Tensor> X(0.2);
+		miniflow::Trainable<Tensor> W(0.1), b(0);
+		miniflow::Linear<Tensor> L(X, W, b);
+		miniflow::Sigmoid<Tensor> S(L);
+	}
+
+	TEST_METHOD(MSENodeTest)
+	{
+		miniflow::Input<Tensor> X(0.2), Y(0.5);
+		miniflow::Trainable<Tensor> W(0.1), b(0);
+		miniflow::Linear<Tensor> L(X, W, b);
+		miniflow::Sigmoid<Tensor> S(L);
+		miniflow::MSE<Tensor> cost(Y, S);
+	}
+};
 
 TEST_CLASS(DynamicTensorTest)
 {

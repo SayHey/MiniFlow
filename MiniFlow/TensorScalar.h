@@ -11,9 +11,9 @@ namespace miniflow
 			Is basically a Scalar that supports all the functions of generic Tensor.
 		*/
 
-		Scalar value_;
-
 	public:
+
+		Scalar value_;			
 
 		TensorScalar() :
 			value_(0)

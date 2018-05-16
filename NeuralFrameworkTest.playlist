@@ -1,0 +1,1 @@
+<Playlist Version="1.0"><Add Test="NeuralFrameworkTest::NodeTest" /><Add Test="BasicNodeTest::MSENodeTest" /><Add Test="BasicNodeTest::SigmoidNodeTest" /><Add Test="BasicNodeTest::TrainableNodeTest" /><Add Test="BasicNodeTest::LinearNodeTest" /><Add Test="BasicNodeTest::InputNodeTest" /></Playlist>
