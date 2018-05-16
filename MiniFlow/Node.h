@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common.h"
-#include "Tensor.h"
+#include "TensorScalar.h"
 
 namespace miniflow
 {

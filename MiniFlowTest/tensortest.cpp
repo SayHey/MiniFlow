@@ -2,8 +2,8 @@
 #include "CppUnitTest.h"
 #include "CppUnitTestAssert.h"
 
-#include "..\DynamicTensor\DynamicTensor.h"
-#include "..\StaticTensor\StaticTensor.h"
+#include "../MiniFlow/DynamicTensor.h"
+#include "../MiniFlow/StaticTensor.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -99,7 +99,7 @@ public:
 
 	TEST_METHOD(GeneralContainerTest)
 	{
-		constexpr statictensor::Tensor<int, 2, 3, 4> tensor = 
+		statictensor::Tensor<int, 2, 3, 4> tensor = 
 		{ 
 			{ 
 				{1,2,3,4},

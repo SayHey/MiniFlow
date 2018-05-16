@@ -1,19 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="nn.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{cf708d08-a2b7-49be-911b-f726aeba397f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tensor">
+      <UniqueIdentifier>{aa989e9e-aabc-42bd-916e-f538006bf728}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -25,8 +22,19 @@
     <ClInclude Include="Node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tensor.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="DynamicTensor.h">
+      <Filter>Header Files\Tensor</Filter>
     </ClInclude>
+    <ClInclude Include="StaticTensor.h">
+      <Filter>Header Files\Tensor</Filter>
+    </ClInclude>
+    <ClInclude Include="TensorScalar.h">
+      <Filter>Header Files\Tensor</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="nn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -118,9 +118,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="DynamicTensor.h" />
     <ClInclude Include="Graph.h" />
     <ClInclude Include="Node.h" />
-    <ClInclude Include="Tensor.h" />
+    <ClInclude Include="StaticTensor.h" />
+    <ClInclude Include="TensorScalar.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
