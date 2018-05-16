@@ -3,6 +3,7 @@
 #include "CppUnitTestAssert.h"
 
 #include "..\DynamicTensor\DynamicTensor.h"
+#include "..\StaticTensor\StaticTensor.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -89,6 +90,35 @@ public:
 		Assert::AreEqual(dot3[0][1], 15);
 		Assert::AreEqual(dot3[1][0], 16);
 		Assert::AreEqual(dot3[1][1], 13);
+	}
+};
+
+TEST_CLASS(StaticTensorTest)
+{
+public:
+
+	TEST_METHOD(GeneralContainerTest)
+	{
+		statictensor::Tensor<int, 2, 3, 4> tensor = 
+		{ 
+			{ 
+				{1,2,3,4},
+				{5,6,7,8},
+				{9,10,-1,-2},
+			},
+			{ 
+				{ 11,12,13,14 },
+				{ 15,16,17,18 },
+				{ 19,20,-11,-12 },
+			} 
+		};
+		
+		auto shape = tensor.get_shape();
+
+		Assert::AreEqual(tensor[1][0][2], 13);
+		Assert::AreEqual(shape[0], unsigned(2));
+		Assert::AreEqual(shape[1], unsigned(3));
+		Assert::AreEqual(shape[2], unsigned(4));
 	}
 
 };

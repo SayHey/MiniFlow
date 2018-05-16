@@ -7,6 +7,9 @@
 
 namespace statictensor
 {
+	template<unsigned rank>
+	using Shape = std::array<unsigned, rank>;
+
 	template<typename TensorContainer>
 	class TensorImp
 	{
@@ -16,20 +19,50 @@ namespace statictensor
 		*/
 
 		using SubTensor = typename TensorContainer::SubTensor;
-		SubTensor data_[TensorContainer::dim_];
+		static constexpr unsigned dim_ = TensorContainer::dim_;
+		static constexpr unsigned rank_ = TensorContainer::rank_;
+		//static constexpr Shape<rank_> shape_ = get_shape();
 
+		SubTensor data_[dim_];
+
+		constexpr static Shape<rank_> get_shape_static()
+		{
+			if constexpr(rank_ == 1)
+			{
+				return { dim_ };
+			}
+			else
+			{
+				Shape<rank_> shape;
+				Shape<rank_ - 1> subTensor_shape = SubTensor::get_shape_static();
+				std::copy(subTensor_shape.begin(), subTensor_shape.end(), shape.begin() + 1);
+				shape[0] = dim_;
+				return shape;
+			}
+		}
+		
 	public:
 
-		TensorImp() = default;
+		constexpr TensorImp() = default;
 
-		TensorImp(std::initializer_list<SubTensor> const& il)
+		constexpr TensorImp(std::initializer_list<SubTensor> const& il)
 		{
 			std::copy(il.begin(), il.end(), data_);
 		}
 
-		SubTensor& operator[](unsigned i)
+		constexpr SubTensor& operator[](unsigned i)
 		{
 			return data_[i];
+		}
+
+		constexpr SubTensor operator[](unsigned i) const
+		{
+			return data_[i];
+		}
+		
+		constexpr Shape<rank_> get_shape()
+		{
+			return TensorImp::get_shape_static();
 		}
 	};
 
@@ -42,15 +75,16 @@ namespace statictensor
 	template<typename T, unsigned dim, unsigned ... dims >
 	struct TensorContainer<T, dim, dims...>
 	{
-		static const unsigned dim_ = dim;
 		using SubTensor = Tensor<T, dims...>;
-		
+		static constexpr unsigned dim_ = dim;
+		static constexpr unsigned rank_ = sizeof...(dims) + 1;
 	};
 
 	template<typename T, unsigned dim>
 	struct TensorContainer<T, dim>
-	{
-		static const unsigned dim_ = dim;
+	{		
 		using SubTensor = T;
+		static constexpr unsigned dim_ = dim;
+		static constexpr unsigned rank_ = 1;
 	};
-}
+} //namespace statictensor
