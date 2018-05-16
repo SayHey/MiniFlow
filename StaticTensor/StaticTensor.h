@@ -21,11 +21,11 @@ namespace statictensor
 		using SubTensor = typename TensorContainer::SubTensor;
 		static constexpr unsigned dim_ = TensorContainer::dim_;
 		static constexpr unsigned rank_ = TensorContainer::rank_;
-		//static constexpr Shape<rank_> shape_ = get_shape();
+		//static constexpr Shape<rank_> shape_ = get_shape_static();
 
 		SubTensor data_[dim_];
 
-		constexpr static Shape<rank_> get_shape_static()
+		static constexpr Shape<rank_> get_shape_static()
 		{
 			if constexpr(rank_ == 1)
 			{
@@ -35,11 +35,16 @@ namespace statictensor
 			{
 				Shape<rank_> shape;
 				Shape<rank_ - 1> subTensor_shape = SubTensor::get_shape_static();
-				std::copy(subTensor_shape.begin(), subTensor_shape.end(), shape.begin() + 1);
+				//std::copy(subTensor_shape.begin(), subTensor_shape.end(), shape.begin() + 1);
+
+				for (int i = 1; i < rank_; i++) shape[i] = subTensor_shape[i - 1];
 				shape[0] = dim_;
 				return shape;
 			}
 		}
+
+		template<typename C>
+		friend class TensorImp;
 		
 	public:
 
@@ -60,10 +65,10 @@ namespace statictensor
 			return data_[i];
 		}
 		
-		constexpr Shape<rank_> get_shape()
+		constexpr Shape<rank_> get_shape() const
 		{
 			return TensorImp::get_shape_static();
-		}
+		}		
 	};
 
 	template<typename T, unsigned ... dims>
