@@ -5,188 +5,154 @@
 
 namespace miniflow
 {
-	namespace placeholder
+	class TensorScalar
 	{
-		class Tensor
+		/*
+			PLACEHOLDER CLASS for the purpose of debugginc of the computational graph.
+			Is basically a Scalar that supports all the functions of generic Tensor.
+		*/
+
+		Scalar value_;
+
+	public:
+
+		TensorScalar() :
+			value_(0)
+		{}
+
+		TensorScalar(Scalar value) :
+			value_(value)
+		{}
+
+		Scalar operator[](int i) const
 		{
-			/*
-				Represents an n-dimensional array of values.
-				PLACEHOLDER CLASS
-			*/
+			return value_;
+		}
 
-			// TODO: Implement
-			// 
-			Scalar value_; //placeholder
+		Scalar& operator[](int i)
+		{
+			return value_;
+		}
 
-			template<typename F>
-			void each(F fn)
-			{
-				fn(0, value_); //placeholder
+		// Element-wise tensor operations
 
-				//for (int i = 0; i < dim; i++)
-				//{
-					//fn(i, _a[i]);
-				//}
-			}
+		friend TensorScalar operator+(TensorScalar const& t1, TensorScalar const& t2)
+		{
+			return t1.value_ + t2.value_;
+		}
 
-			template<typename F>
-			static Tensor zip(Tensor const& v1, Tensor const& v2, F fn)
-			{
-				Tensor r;
-				r.each([&](int i, Scalar& x) {x = fn(v1[i], v2[i]); });
-				return r;
-			}
+		friend TensorScalar operator-(TensorScalar const& t1, TensorScalar const& t2)
+		{
+			return t1.value_ - t2.value_;
+		}
 
-			template<typename F>
-			static Tensor map(Tensor const& v, F fn)
-			{
-				Tensor r;
-				r.each([&](int i, Scalar& x) {x = fn(v[i]); });
-				return r;
-			}
+		friend TensorScalar operator*(TensorScalar const& t1, TensorScalar const& t2)
+		{
+			return t1.value_ * t2.value_;
+		}
 
-		public:
+		friend TensorScalar operator/(TensorScalar const& t1, TensorScalar const& t2)
+		{
+			return t1.value_ / t2.value_;
+		}
 
-			Tensor() :
-				value_(0)
-			{}
+		void operator+=(const TensorScalar& t)
+		{
+			*this = *this + t;
+		}
 
-			Tensor(Scalar value) :
-				value_(value)
-			{}
+		void operator-=(const TensorScalar& t)
+		{
+			*this = *this - t;
+		}
 
-			Scalar operator[](int i) const
-			{
-				return value_; //Placeholder;
-			}
+		void operator*=(const TensorScalar& t)
+		{
+			*this = *this * t;
+		}
 
-			Scalar& operator[](int i)
-			{
-				return value_; //Placeholder;
-			}
+		void operator/=(const TensorScalar& t)
+		{
+			*this = *this / t;
+		}
 
-			// Element-wise tensor operations
+		// Element-wise operations with scalars
 
-			friend Tensor operator+(Tensor const& t1, Tensor const& t2)
-			{
-				return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 + x2; });
-			}
+		friend TensorScalar operator+(TensorScalar const& t, Scalar s)
+		{
+			return t.value_ + s;
+		}
 
-			friend Tensor operator-(Tensor const& t1, Tensor const& t2)
-			{
-				return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 - x2; });
-			}
+		friend TensorScalar operator+(Scalar s, TensorScalar const& t)
+		{
+			return t + s;
+		}
 
-			friend Tensor operator*(Tensor const& t1, Tensor const& t2)
-			{
-				return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 * x2; });
-			}
+		friend TensorScalar operator-(TensorScalar const& t, Scalar s)
+		{
+			return t.value_ - s;
+		}
 
-			friend Tensor operator/(Tensor const& t1, Tensor const& t2)
-			{
-				return Tensor::zip(t1, t2, [](Scalar x1, Scalar x2) {return x1 / x2; });
-			}
+		friend TensorScalar operator-(Scalar s, TensorScalar const& t)
+		{
+			return s - t.value_;
+		}
 
-			void operator+=(const Tensor& t)
-			{
-				*this = *this + t;
-			}
+		friend TensorScalar operator*(TensorScalar const& t, Scalar s)
+		{
+			return s * t.value_;
+		}
 
-			void operator-=(const Tensor& t)
-			{
-				*this = *this - t;
-			}
+		friend TensorScalar operator*(Scalar s, TensorScalar const& t)
+		{
+			return t * s;
+		}
 
-			void operator*=(const Tensor& t)
-			{
-				*this = *this * t;
-			}
+		friend TensorScalar operator/(Scalar s, TensorScalar const& t)
+		{
+			return s / t.value_;
+		}
 
-			void operator/=(const Tensor& t)
-			{
-				*this = *this / t;
-			}
+		friend TensorScalar operator/(TensorScalar const& t, Scalar s)
+		{
+			return t * 1 / s;
+		}
 
-			// Element-wise operations with scalars
+		friend TensorScalar operator-(TensorScalar const& t)
+		{
+			return t * -1;
+		}
 
-			friend Tensor operator+(Tensor const& t, Scalar s)
-			{
-				return Tensor::map(t, [&](Scalar x) {return x + s; });
-			}
+		// Special functions
 
-			friend Tensor operator+(Scalar s, Tensor const& t)
-			{
-				return t + s;
-			}
+		static TensorScalar sum(TensorScalar const& t)
+		{
+			return TensorScalar(t.value_);
+		}
 
-			friend Tensor operator-(Tensor const& t, Scalar s)
-			{
-				return Tensor::map(t, [&](Scalar x) {return x - s; });
-			}
+		static TensorScalar mean(TensorScalar const& t)
+		{
+			return TensorScalar(t.value_);
+		}
 
-			friend Tensor operator-(Scalar s, Tensor const& t)
-			{
-				return t - s;
-			}
+		static TensorScalar exp(const TensorScalar& t)
+		{
+			return pow(EXP, t.value_);
+		}
 
-			friend Tensor operator*(Tensor const& t, Scalar s)
-			{
-				return Tensor::map(t, [&](Scalar x) {return x * s; });
-			}
+		static TensorScalar sqr(const TensorScalar& t)
+		{
+			return t * t;
+		}
 
-			friend Tensor operator*(Scalar s, Tensor const& t)
-			{
-				return t * s;
-			}
+		static TensorScalar dot(const TensorScalar& t1, const TensorScalar& t2)
+		{
+			return TensorScalar(t1.value_ * t2.value_);
+		}
 
-			friend Tensor operator/(Scalar s, Tensor const& t)
-			{
-				return Tensor::map(t, [&](Scalar x) {return s / x; });
-			}
-
-			friend Tensor operator/(Tensor const& t, Scalar s)
-			{
-				return t * 1 / s;
-			}
-
-			friend Tensor operator-(Tensor const& t)
-			{
-				return t * -1;
-			}
-
-			//
-
-			static Tensor sum(Tensor const& t)
-			{
-				return Tensor(t.value_); //placeholder
-			}
-
-			static Tensor mean(Tensor const& t)
-			{
-				size_t m = 1; //placeholder
-				Scalar d = 1. / m;
-				return d * sum(t);
-			}
-
-			static Tensor exp(const Tensor& t)
-			{
-				return Tensor::map(t, [&](Scalar x) {return pow(EXP, x); });
-			}
-
-			static Tensor sqr(const Tensor& t)
-			{
-				return t * t;
-			}
-
-			static Tensor dot(const Tensor& t1, const Tensor& t2)
-			{
-				return Tensor(t1.value_ * t2.value_); //placeholder
-			}
-
-			Tensor T() const
-			{
-				return *this; //placeholder
-			}
-		};
-	}
+		TensorScalar T() const
+		{
+			return TensorScalar(value_);
+		}
+	};
 }
