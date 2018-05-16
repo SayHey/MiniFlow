@@ -8,25 +8,25 @@ namespace dynamictensor
 	using miniflow::Index;
 	using miniflow::EXP;
 
-	template<unsigned dim> struct Shape
+	template<unsigned rank> struct Shape
 	{
 		/*
 			Represents a shape of Tensor.
 		*/
 
-		Index idx_[dim];
-		static constexpr unsigned dim_ = dim;
-		using SubShape = typename std::conditional<dim == 1, int, Shape<dim-1>>::type;
+		Index idx_[rank];
+		static constexpr unsigned rank_ = rank;
+		using SubShape = typename std::conditional<rank == 1, int, Shape<rank-1>>::type;
 
-		// Shape convolution returns dim - 1 fold of
+		// Shape convolution returns rank - 1 fold of
 		// original shape without k's dimention.
 		SubShape convolutionShape(int k) const
 		{
-			if constexpr (dim == 1) return 0;
+			if constexpr (rank == 1) return 0;
 			else
 			{
 				SubShape subshape;
-				for (int i = 0; i < dim - 1; i++)
+				for (int i = 0; i < rank - 1; i++)
 				{
 					int j = (i < k) ? i : i + 1;
 					subshape[i] = idx_[j];
@@ -46,14 +46,14 @@ namespace dynamictensor
 		// Folds last dimention.
 		SubShape foldShape() const
 		{
-			return convolutionShape(dim);
+			return convolutionShape(rank);
 		}
 
 		//Transpose shape
 		Shape transpose()
 		{
 			Shape transposed_shape = *this;
-			std::swap(transposed_shape.idx_[dim - 1], transposed_shape.idx_[dim - 2]);
+			std::swap(transposed_shape.idx_[rank - 1], transposed_shape.idx_[rank - 2]);
 			return transposed_shape;
 		}
 
@@ -71,7 +71,7 @@ namespace dynamictensor
 
 		bool operator==(Shape const& s) const
 		{
-			for (int i = 0; i < dim; i++)
+			for (int i = 0; i < rank; i++)
 			{
 				if (s.idx_[i] != idx_[i]) return false;
 			}
@@ -84,25 +84,25 @@ namespace dynamictensor
 		}
 	};
 
-	template<class T, unsigned dim> 
+	template<class T, unsigned rank> 
 	class Tensor
 	{
 		/*
-			Represents an n-dimensional array of values.
-			Stored as std::vector of vectors with a dynamic shape allocated in runtime.
-			Only dimention of tensor is static.
+			Represents an n-dimensional array of values of a given rank.
+			Stored as a std::vector of vectors with a dynamic shape allocated in runtime.
+			Only rank of a tensor is static.
 		*/
 
 	public:
 
 		// Tempalte statics
-		static constexpr unsigned dim_ = dim;
-		static constexpr bool is_vector_ = dim_ == 1;
-		static constexpr bool is_matrix_ = dim_ == 2;
-		using SubTensor = typename std::conditional<is_vector_, T, Tensor<T, dim - 1>>::type;
+		static constexpr unsigned rank_ = rank;
+		static constexpr bool is_vector_ = rank_ == 1;
+		static constexpr bool is_matrix_ = rank_ == 2;
+		using SubTensor = typename std::conditional<is_vector_, T, Tensor<T, rank - 1>>::type;
 
 		std::vector<SubTensor> data_; // main memory structure
-		Shape<dim> shape_; // shape of tensor
+		Shape<rank> shape_; // shape of tensor
 
 		// Internal logic
 
@@ -164,20 +164,20 @@ namespace dynamictensor
 		}
 		
 		//
-		//template<class T, typename F, unsigned dim>
-		//static Tensor<T, dim> fold(const Tensor<T, dim>& t, F fn) {}
+		//template<class T, typename F, unsigned rank>
+		//static Tensor<T, rank> fold(const Tensor<T, rank>& t, F fn) {}
 			
 	public:
 
 		// Initialize empty tensor
-		Tensor() : Tensor(Shape<dim>()) {}
+		Tensor() : Tensor(Shape<rank>()) {}
 
 		// Initialize tensor of given shape
-		Tensor(Shape<dim> const& shape) : Tensor(shape, 0) {}
+		Tensor(Shape<rank> const& shape) : Tensor(shape, 0) {}
 
 		// Initialize tensor of given shape filled with value
-		template<unsigned dim>
-		Tensor(Shape<dim> const& shape, T value) : shape_(shape)
+		template<unsigned rank>
+		Tensor(Shape<rank> const& shape, T value) : shape_(shape)
 		{
 			data_.resize(shape[0]);
 			for (auto& subTensor : data_)
@@ -206,7 +206,7 @@ namespace dynamictensor
 		}
 
 		// Get shape
-		Shape<dim> shape() const
+		Shape<rank> shape() const
 		{
 			return shape_;
 		}
@@ -405,7 +405,7 @@ namespace dynamictensor
 
 		// Dot
 
-		using DotType = typename std::conditional<dim == 1, T, Tensor>::type;
+		using DotType = typename std::conditional<rank == 1, T, Tensor>::type;
 
 		friend DotType dot(const Tensor& t1, const Tensor& t2)
 		{
@@ -424,7 +424,7 @@ namespace dynamictensor
 			}			
 		}
 
-		friend Tensor dot(const Tensor<T, dim + 1>& t1, const Tensor& t2)
+		friend Tensor dot(const Tensor<T, rank + 1>& t1, const Tensor& t2)
 		{
 			assert(t1.shape()[1] == t2.shape()[0]);
 			Tensor<T, 1> result({ t1.shape()[0] });

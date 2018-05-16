@@ -35,9 +35,7 @@ namespace statictensor
 			{
 				Shape<rank_> shape;
 				Shape<rank_ - 1> subTensor_shape = SubTensor::get_shape_static();
-				//std::copy(subTensor_shape.begin(), subTensor_shape.end(), shape.begin() + 1);
-
-				for (int i = 1; i < rank_; i++) shape[i] = subTensor_shape[i - 1];
+				std::copy(subTensor_shape.begin(), subTensor_shape.end(), shape.begin() + 1);
 				shape[0] = dim_;
 				return shape;
 			}
