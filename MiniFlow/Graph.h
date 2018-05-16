@@ -13,34 +13,34 @@ namespace miniflow
 			Input nodes are calculated first.
 		*/
 
-		std::list<Node*> nodes_;
+		std::list<NodeInterface*> nodes_;
 
 		// Traverse the graph from the top to the bottom
 		template<typename F>
-		void traverse(Node* node, F fn)
+		void traverse(NodeInterface* node, F fn)
 		{
 			fn(node);
-			for (Node* input : node->inbound_nodes_)
+			for (NodeInterface* input : node->inbound_nodes())
 			{
 				traverse(input, fn);
 			}
 		}
 
-		void topological_sort(Node* output_node)
+		void topological_sort(NodeInterface* output_node)
 		{
 			/*
 				Sort the nodes in topological order
 			*/
 
-			std::list<Node*> input_nodes;
+			std::list<NodeInterface*> input_nodes;
 
-			traverse(output_node, [&](Node* node)
+			traverse(output_node, [&](NodeInterface* node)
 			{
 				if (node->is_input()) input_nodes.push_front(node);
 				else nodes_.push_front(node);
 			});
 
-			for (Node* node : input_nodes)
+			for (NodeInterface* node : input_nodes)
 			{
 				nodes_.push_front(node);
 			}
@@ -48,21 +48,15 @@ namespace miniflow
 
 	public:
 
-		Graph(Node& output_node)
+		Graph(NodeInterface& output_node)
 		{
 			topological_sort(&output_node);
-		}
-
-		// Returns the result of computation
-		Tensor value() const
-		{
-			return nodes_.back()->getValue();
 		}
 
 		// Performs a forward pass through a list of Nodes.
 		void forward()
 		{
-			for (Node* node : nodes_)
+			for (NodeInterface* node : nodes_)
 			{
 				node->forward();
 			}
@@ -71,7 +65,7 @@ namespace miniflow
 		// Performs a backward pass through a list of Nodes.
 		void backward()
 		{
-			for (Node* node : boost::adaptors::reverse(nodes_))
+			for (NodeInterface* node : boost::adaptors::reverse(nodes_))
 			{
 				node->backward();
 			}
@@ -80,7 +74,7 @@ namespace miniflow
 		// Performs an update of all the trainable Nodes.
 		void update(Scalar learning_rate)
 		{
-			for (Node* node : nodes_)
+			for (NodeInterface* node : nodes_)
 			{
 				node->update(learning_rate);
 			}
@@ -97,7 +91,6 @@ namespace miniflow
 		{
 			for (size_t i = 0; i <  repeats; i++)
 			{
-				Tensor cost = value();
 				SGD_step(learning_rate);
 			}
 		}

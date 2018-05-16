@@ -20,7 +20,7 @@ namespace dynamictensor
 
 		// Shape convolution returns rank - 1 fold of
 		// original shape without k's dimention.
-		SubShape convolutionShape(int k) const
+		SubShape convoluteShape(int k) const
 		{
 			if constexpr (rank == 1) return 0;
 			else
@@ -40,13 +40,13 @@ namespace dynamictensor
 		// a tensor of given shape.
 		SubShape subShape() const
 		{
-			return convolutionShape(0);
+			return convoluteShape(0);
 		}
 
 		// Folds last dimention.
 		SubShape foldShape() const
 		{
-			return convolutionShape(rank);
+			return convoluteShape(rank);
 		}
 
 		//Transpose shape

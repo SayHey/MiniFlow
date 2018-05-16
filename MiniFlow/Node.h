@@ -7,7 +7,20 @@ namespace miniflow
 {
 	using placeholder::Tensor;
 
-	class Node
+	class NodeInterface
+	{
+
+	public:
+
+		virtual ~NodeInterface() = default;
+		virtual void forward() = 0;									// Calculates the node's output (value_)
+		virtual void backward() = 0;								// Calculates derivatives (gradient_)
+		virtual void update(Scalar learning_rate) = 0;				// Updates trainables
+		virtual bool is_input() const = 0;							//
+		virtual std::vector<NodeInterface*> inbound_nodes() = 0;	//
+	};
+
+	class Node : public NodeInterface
 	{
 		/*
 			Base class for nodes in the network.
@@ -17,12 +30,12 @@ namespace miniflow
 
 		struct OutboundNode
 		{
-			const Node* node;				//: A pointer to outbound node itself.
-			std::size_t index;		//: An index of the host node in the outbound node's list of the inputs.
+			const Node* node;							//: A pointer to outbound node itself.
+			std::size_t index;							//: An index of the host node in the outbound node's list of the inputs.
 
 			Tensor getGradient()
 			{
-				return node->getGradient()[index]; // An index is used for getting the outbound node gradient with respect to host node.
+				return node->getGradient()[index];		// An index is used for getting the outbound node gradient with respect to host node.
 			}
 		};
 
@@ -51,13 +64,26 @@ namespace miniflow
 			}
 		}
 
+		// Node Interface virtual functions.
+		// General implementations.
+		// Note that different functions are further overridden in Node specializations.
+		void forward() override {};
+		void backward() override {};
+		void update(Scalar /*learning_rate*/) override {};
+		bool is_input() const override { return false; }			
+		std::vector<NodeInterface*> inbound_nodes() override
+		{
+			std::vector<NodeInterface*> inbound_nodes_interface(inbound_nodes_.size());
+			for (std::size_t i = 0; i < inbound_nodes_.size(); i++)
+			{
+				inbound_nodes_interface[i] = inbound_nodes_[i];
+			}
+			return inbound_nodes_interface;
+		}
+
+		// Access functions.
 		Tensor getValue() const { return value_; }
 		std::vector<Tensor> getGradient() const { return gradient_; }
-
-		virtual void forward() {} // Calculates the node's output (value_)
-		virtual void backward() {} // Calculates derivatives (gradient_)
-		virtual void update(Scalar learning_rate) {} // Updates trainables
-		virtual bool is_input() const { return false; }
 	};
 
 	class Input : public Node
