@@ -15,7 +15,7 @@ namespace miniflow
 		virtual ~NodeInterface() = default;
 		virtual void forward() = 0;									// Calculates the node's output (value_)
 		virtual void backward() = 0;								// Calculates derivatives (gradient_)
-		virtual void update(Scalar learning_rate) = 0;				// Updates trainables
+		virtual void update(Scalar /*learning_rate*/) = 0;				// Updates trainables
 		virtual bool is_input() const = 0;							//
 		virtual std::vector<NodeInterface*> inbound_nodes() = 0;	//
 	};
@@ -46,9 +46,6 @@ namespace miniflow
 		std::vector<Tensor> gradient_;					//: Partial derivatives of this node with respect to the input nodes.
 														//  Set by running the forward() method.
 														//  Has the same size as a list of the input nodes.
-
-		friend class Graph;
-
 	public:
 
 		Node(std::vector<Node*> inbound) :
@@ -65,8 +62,7 @@ namespace miniflow
 			}
 		}
 
-		// Node Interface virtual functions.
-		// General implementations.
+		// Node Interface virtual functions. General implementations.
 		// Note that different functions are further overridden in Node specializations.
 		void forward() override {};
 		void backward() override {};

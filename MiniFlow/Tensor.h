@@ -24,12 +24,12 @@ namespace miniflow
 			value_(value)
 		{}
 
-		Scalar operator[](int i) const
+		Scalar operator[](int) const
 		{
 			return value_;
 		}
 
-		Scalar& operator[](int i)
+		Scalar& operator[](int)
 		{
 			return value_;
 		}

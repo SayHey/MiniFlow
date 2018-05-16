@@ -25,7 +25,7 @@ namespace statictensor
 
 		SubTensor data_[dim_];
 
-		static constexpr Shape<rank_> get_shape_static()
+		static Shape<rank_> get_shape_static()
 		{
 			if constexpr(rank_ == 1)
 			{
@@ -46,24 +46,24 @@ namespace statictensor
 		
 	public:
 
-		constexpr TensorImp() = default;
+		TensorImp() = default;
 
-		constexpr TensorImp(std::initializer_list<SubTensor> const& il)
+		TensorImp(std::initializer_list<SubTensor> const& il)
 		{
 			std::copy(il.begin(), il.end(), data_);
 		}
 
-		constexpr SubTensor& operator[](unsigned i)
+		SubTensor& operator[](unsigned i)
 		{
 			return data_[i];
 		}
 
-		constexpr SubTensor operator[](unsigned i) const
+		SubTensor operator[](unsigned i) const
 		{
 			return data_[i];
 		}
 		
-		constexpr Shape<rank_> get_shape() const
+		Shape<rank_> get_shape() const
 		{
 			return TensorImp::get_shape_static();
 		}		

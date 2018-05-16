@@ -99,7 +99,7 @@ public:
 
 	TEST_METHOD(GeneralContainerTest)
 	{
-		statictensor::Tensor<int, 2, 3, 4> tensor = 
+		constexpr statictensor::Tensor<int, 2, 3, 4> tensor = 
 		{ 
 			{ 
 				{1,2,3,4},
