@@ -5,7 +5,7 @@
 
 namespace miniflow
 {
-	using placeholder::Tensor;
+	//using placeholder::Tensor;
 
 	class NodeInterface
 	{
@@ -20,6 +20,7 @@ namespace miniflow
 		virtual std::vector<NodeInterface*> inbound_nodes() = 0;	//
 	};
 
+	template<typename Tensor>
 	class Node : public NodeInterface
 	{
 		/*
@@ -86,7 +87,8 @@ namespace miniflow
 		std::vector<Tensor> getGradient() const { return gradient_; }
 	};
 
-	class Input : public Node
+	template<typename Tensor>
+	class Input : public Node<Tensor>
 	{
 		/*
 			A generic input into the network.
@@ -117,7 +119,8 @@ namespace miniflow
 		bool is_input() const override { return true; }
 	};
 
-	class Trainable : public Input
+	template<typename Tensor>
+	class Trainable : public Input<Tensor>
 	{
 		/*
 			A trainable parameter of the network.
@@ -137,7 +140,8 @@ namespace miniflow
 		}
 	};
 
-	class Linear : public Node
+	template<typename Tensor>
+	class Linear : public Node<Tensor>
 	{
 		/*
 			Represents a node that performs a linear transform.
@@ -179,7 +183,8 @@ namespace miniflow
 		}
 	};
 
-	class Sigmoid : public Node
+	template<typename Tensor>
+	class Sigmoid : public Node<Tensor>
 	{
 		/*
 			 Represents a node that performs the sigmoid activation function.
@@ -220,7 +225,8 @@ namespace miniflow
 		};
 	};
 
-	class MSE : public Node
+	template<typename Tensor>
+	class MSE : public Node<Tensor>
 	{
 		/*
 		Represents a node that calculates mean squared error cost function.
