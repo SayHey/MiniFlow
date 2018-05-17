@@ -58,7 +58,7 @@ namespace miniflow
 			// Sets this node as an outbound node for all of this node's inputs.
 			for (std::size_t i = 0; i < inbound_nodes_.size(); i++)
 			{
-				inbound_nodes_[i]->outbound_nodes_.push_back({ this, 0 });
+				inbound_nodes_[i]->outbound_nodes_.push_back({ this, i });
 			}
 		}
 
@@ -79,8 +79,8 @@ namespace miniflow
 		}
 
 		// Access functions.
-		Tensor getValue() const { return value_; }
-		std::vector<Tensor> getGradient() const { return gradient_; }
+		auto getValue() const { return value_; }
+		auto getGradient() const { return gradient_; }
 	};
 
 	template<typename Tensor>
@@ -106,8 +106,7 @@ namespace miniflow
 			// Cycle through the outputs. Sum the partial with respect to the input over all the outputs.
 			for (OutboundNode outbound_node : outbound_nodes_)
 			{
-				// Get the partial of the cost with respect to this node.
-				Tensor grad_cost = outbound_node.getGradient();
+				// Get the partial of the cost with respect to this node.				
 				gradient_[0] += outbound_node.getGradient();
 			}
 		}
@@ -156,10 +155,10 @@ namespace miniflow
 		void forward() override
 		{
 			// The math behind a linear transform.
-			Tensor X = inbound_nodes_[0]->getValue();
-			Tensor W = inbound_nodes_[1]->getValue();
-			Tensor b = inbound_nodes_[2]->getValue();
-			value_ = Tensor::dot(X, W) + b;
+			auto const& X = inbound_nodes_[0]->getValue();
+			auto const& W = inbound_nodes_[1]->getValue();
+			auto const& b = inbound_nodes_[2]->getValue();
+			value_ = dot(X, W) + b;
 		}
 
 		void backward() override
@@ -168,13 +167,13 @@ namespace miniflow
 			for (OutboundNode outbound_node : outbound_nodes_)
 			{
 				// Get the partial of the cost with respect to this node.
-				Tensor grad_cost = outbound_node.getGradient();
+				auto const& grad_cost = outbound_node.getGradient();
 				// Set the partial of the loss with respect to this node's inputs.
-				gradient_[0] += Tensor::dot(grad_cost, inbound_nodes_[1]->getValue().T());
+				gradient_[0] += dot(grad_cost, transpose(inbound_nodes_[1]->getValue()));
 				// Set the partial of the loss with respect to this node's weights.
-				gradient_[1] += Tensor::dot(inbound_nodes_[0]->getValue().T(), grad_cost);
+				gradient_[1] += dot(transpose(inbound_nodes_[0]->getValue()), grad_cost);
 				// Set the partial of the loss with respect to this node's bias.
-				gradient_[2] += Tensor::sum(grad_cost); //TODO
+				gradient_[2] += sum(grad_cost); //TODO
 			}
 		}
 	};
@@ -199,8 +198,8 @@ namespace miniflow
 		void forward() override
 		{
 			// The math behind a sigmoid.
-			const Tensor& input = inbound_nodes_[0]->getValue();
-			value_ = 1. / (1 + Tensor::exp(-input));
+			auto const& input = inbound_nodes_[0]->getValue();
+			value_ = 1. / (1 + exp(-input));
 		}
 
 		void backward() override
@@ -214,8 +213,8 @@ namespace miniflow
 			for (OutboundNode outbound_node : outbound_nodes_)
 			{
 				// Get the partial of the cost with respect to this node.
-				Tensor sigmoid = value_;
-				Tensor grad_cost = outbound_node.getGradient();
+				auto const& sigmoid = value_;
+				auto const& grad_cost = outbound_node.getGradient();
 				gradient_[0] += sigmoid * (1 - sigmoid) * grad_cost;
 			}
 		};
@@ -246,12 +245,12 @@ namespace miniflow
 
 		void forward() override
 		{
-			Tensor labels = inbound_nodes_[0]->getValue();
-			Tensor predictions = inbound_nodes_[1]->getValue();
+			auto const& labels = inbound_nodes_[0]->getValue();
+			auto const& predictions = inbound_nodes_[1]->getValue();
 
 			m_ = 1;// inbound_nodes[0]->getValue().shape[0]; //TODO
 			diff_ = labels - predictions;
-			value_ = Tensor::mean(Tensor::sqr(diff_));
+			value_ = mean(sqr(diff_));
 		}
 
 		void backward() override
@@ -262,6 +261,22 @@ namespace miniflow
 			
 			gradient_[0] = 2. / m_ * diff_;
 			gradient_[1] = - gradient_[0];
+		}
+	};
+
+	template<typename Tensor>
+	class DebugNode : public Node<Tensor>
+	{
+		/*
+			Simply sets gradient gradient with respect to the input node to one
+		*/
+
+	public:
+
+		DebugNode(Node& node) :
+			Node(std::vector<Node*>{ &node })
+		{
+			gradient_[0] = 1;
 		}
 	};
 }

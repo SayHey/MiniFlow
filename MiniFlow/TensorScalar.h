@@ -124,34 +124,34 @@ namespace miniflow
 
 		// Special functions
 
-		static TensorScalar sum(TensorScalar const& t)
+		friend TensorScalar sum(TensorScalar const& t)
 		{
 			return TensorScalar(t.value_);
 		}
 
-		static TensorScalar mean(TensorScalar const& t)
+		friend TensorScalar mean(TensorScalar const& t)
 		{
 			return TensorScalar(t.value_);
 		}
 
-		static TensorScalar exp(const TensorScalar& t)
+		friend TensorScalar exp(const TensorScalar& t)
 		{
 			return pow(EXP, t.value_);
 		}
 
-		static TensorScalar sqr(const TensorScalar& t)
+		friend TensorScalar sqr(const TensorScalar& t)
 		{
 			return t * t;
 		}
 
-		static TensorScalar dot(const TensorScalar& t1, const TensorScalar& t2)
+		friend TensorScalar dot(const TensorScalar& t1, const TensorScalar& t2)
 		{
 			return TensorScalar(t1.value_ * t2.value_);
 		}
 
-		TensorScalar T() const
+		friend TensorScalar transpose(TensorScalar const& input)
 		{
-			return TensorScalar(value_);
+			return TensorScalar(input.value_);
 		}
 	};
 }

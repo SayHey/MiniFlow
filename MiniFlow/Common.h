@@ -8,6 +8,8 @@
 #include <cmath>
 #include <numeric>
 #include <execution>
+
+#include <boost/range/adaptor/reversed.hpp>
 //#include <algorithm>
 
 namespace miniflow

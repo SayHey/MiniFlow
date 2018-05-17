@@ -121,7 +121,7 @@ namespace dynamictensor
 		template<typename F>
 		void each(F fn) const
 		{
-			for (int i = 0; i < shape_[0]; i++)
+			for (Index i = 0; i < shape_[0]; i++)
 			{
 				fn(i, data_[i]);
 			}
@@ -287,42 +287,42 @@ namespace dynamictensor
 
 		// Element-wise operations with scalars
 
-		friend Tensor operator+(Tensor const& t, Scalar s)
+		friend Tensor operator+(Tensor const& t, T s)
 		{
 			return map(t, [&](SubTensor x) {return x + s; });
 		}
 
-		friend Tensor operator+(Scalar s, Tensor const& t)
+		friend Tensor operator+(T s, Tensor const& t)
 		{
 			return t + s;
 		}
 
-		friend Tensor operator-(Tensor const& t, Scalar s)
+		friend Tensor operator-(Tensor const& t, T s)
 		{
 			return t.map([&](SubTensor x) {return x - s; });
 		}
 
-		friend Tensor operator-(Scalar s, Tensor const& t)
+		friend Tensor operator-(T s, Tensor const& t)
 		{
 			return -1 * t + s;
 		}
 
-		friend Tensor operator*(Tensor const& t, Scalar s)
+		friend Tensor operator*(Tensor const& t, T s)
 		{
 			return t.map([&](SubTensor x) {return x * s; });
 		}
 
-		friend Tensor operator*(Scalar s, Tensor const& t)
+		friend Tensor operator*(T s, Tensor const& t)
 		{
 			return t * s;
 		}
 
-		friend Tensor operator/(Scalar s, Tensor const& t)
+		friend Tensor operator/(T s, Tensor const& t)
 		{
 			return t.map([&](SubTensor x) {return s / x; });
 		}
 
-		friend Tensor operator/(Tensor const& t, Scalar s)
+		friend Tensor operator/(Tensor const& t, T s)
 		{
 			return t * 1 / s;
 		}
@@ -336,7 +336,7 @@ namespace dynamictensor
 
 		friend Tensor exp(Tensor const& input)
 		{
-			return input.map_all([&](Scalar x) {return std::pow(EXP, x); });
+			return input.map_all([&](T x) {return std::pow(EXP, x); });
 		}
 
 		friend Tensor sqr(Tensor const& input)
@@ -375,7 +375,7 @@ namespace dynamictensor
 			SubTensor sumTensor(input.shape().foldShape());
 			if constexpr(input.is_vector_)
 			{	
-				sumTensor = std::accumulate(input.data_.begin(), input.data_.end(), 0.0);
+				sumTensor = std::accumulate(input.data_.begin(), input.data_.end(), T(0));
 			}
 			else
 			{

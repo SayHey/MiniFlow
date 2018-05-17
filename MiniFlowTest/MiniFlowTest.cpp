@@ -4,63 +4,117 @@
 
 #include "../MiniFlow/DynamicTensor.h"
 #include "../MiniFlow/StaticTensor.h"
-#include "../MiniFlow/Node.h"
+#include "../MiniFlow/Graph.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+constexpr double eps = 1e-10;
 
 TEST_CLASS(BasicNodeTest)
 {
-	using Tensor = miniflow::TensorScalar;
-	static constexpr double eps = 1e-10;
+	using Tensor = miniflow::TensorScalar;	
 
 public:
 
 	TEST_METHOD(InputNodeTest)
 	{
 		miniflow::Input<Tensor> X(0.2);
-		X.forward();
-		X.backward();
-		X.update(1.);
+		miniflow::DebugNode<Tensor> D(X);
+		
 		Assert::AreEqual(X.is_input(), true);
 		Assert::AreEqual(X.getValue().value_, 0.2);
 		Assert::AreEqual(X.getGradient()[0].value_, 0.);
 		Assert::AreEqual(X.inbound_nodes().size(), size_t(0));
+
+		X.forward();
+		X.backward();
+		X.update(0.1);
+
+		Assert::AreEqual(X.getValue().value_, 0.2);
+		Assert::AreEqual(X.getGradient()[0].value_, 1.);
 	}
 
 	TEST_METHOD(TrainableNodeTest)
 	{
 		miniflow::Trainable<Tensor> W(0.1);
-		W.forward();
-		W.backward();
-		W.update(1.);
+		miniflow::DebugNode<Tensor> D(W);
+
 		Assert::AreEqual(W.is_input(), true);
 		Assert::AreEqual(W.getValue().value_, 0.1);
 		Assert::AreEqual(W.getGradient()[0].value_, 0.);
 		Assert::AreEqual(W.inbound_nodes().size(), size_t(0));
+
+		W.forward();
+		W.backward();
+		W.update(0.1);
+
+		Assert::AreEqual(W.getValue().value_, 0.);
+		Assert::AreEqual(W.getGradient()[0].value_, 1.);
 	}
 
 	TEST_METHOD(LinearNodeTest)
 	{
 		miniflow::Input<Tensor> X(0.2);
-		miniflow::Trainable<Tensor> W(0.1), b(0);
+		miniflow::Trainable<Tensor> W(1), b(0.3);
 		miniflow::Linear<Tensor> L(X, W, b);
+		miniflow::DebugNode<Tensor> D(L);
+
+		Assert::AreEqual(L.is_input(), false);
+		Assert::AreEqual(L.getValue().value_, 0.);
+		Assert::AreEqual(L.inbound_nodes().size(), size_t(3));
+
+		miniflow::Graph neural_network(D);
+		neural_network.SGD(1., 1);
+
+		Assert::AreEqual(L.getValue().value_, 0.5);
+		Assert::AreEqual(W.getGradient()[0].value_, 0.2);
+		Assert::AreEqual(W.getValue().value_, 0.8);
+		
 	}
 
 	TEST_METHOD(SigmoidNodeTest)
 	{
 		miniflow::Input<Tensor> X(0.2);
-		miniflow::Trainable<Tensor> W(0.1), b(0);
-		miniflow::Linear<Tensor> L(X, W, b);
-		miniflow::Sigmoid<Tensor> S(L);
+		miniflow::Sigmoid<Tensor> S(X);
+		miniflow::DebugNode<Tensor> D(S);
+
+		S.forward();
+		S.backward();
+		X.backward();
+
+		Assert::AreEqual(S.getValue().value_, 0.55, 1e-3);
+		Assert::AreEqual(X.getGradient()[0].value_, 0.247, 1e-3);
 	}
 
 	TEST_METHOD(MSENodeTest)
 	{
 		miniflow::Input<Tensor> X(0.2), Y(0.5);
+		miniflow::MSE<Tensor> cost(Y, X);
+
+		cost.forward();
+		cost.backward();
+		X.backward();
+		Y.backward();
+
+		Assert::AreEqual(cost.getValue().value_, 0.09, 1e-3);
+		Assert::AreEqual(X.getGradient()[0].value_, -0.6, 1e-3);
+		Assert::AreEqual(Y.getGradient()[0].value_, 0.6, 1e-3);
+	}
+
+	TEST_METHOD(FullNetworkTest)
+	{
+		miniflow::Scalar learning_rate = 0.1;
+		int repeats = 10;
+
+		miniflow::Input<Tensor> X(0.2), Y(0.5);
 		miniflow::Trainable<Tensor> W(0.1), b(0);
 		miniflow::Linear<Tensor> L(X, W, b);
 		miniflow::Sigmoid<Tensor> S(L);
 		miniflow::MSE<Tensor> cost(Y, S);
+
+		miniflow::Graph neural_network(cost);
+		neural_network.SGD(learning_rate, repeats);
+
+		Assert::AreEqual(cost.getValue().value_, 0.09, 1e-3);
 	}
 };
 
@@ -89,14 +143,14 @@ public:
 	TEST_METHOD(TensorMath)
 	{
 		dynamictensor::Shape<2> shape{ 2, 5 };
-		dynamictensor::Tensor<int, 2> tensor1(shape, 2);
-		tensor1[0][0] = 3;
+		dynamictensor::Tensor<double, 2> tensor1(shape, 2.);
+		tensor1[0][0] = 3.;
 
-		dynamictensor::Tensor<int, 2> tensorExp = exp(tensor1);  //
-		dynamictensor::Tensor<int, 2> tensorSQR = sqr(tensor1); //
+		dynamictensor::Tensor<double, 2> tensorExp = exp(tensor1);  //
+		dynamictensor::Tensor<double, 2> tensorSQR = sqr(tensor1); //
 
-		Assert::AreEqual(tensorExp[0][0], 20);
-		Assert::AreEqual(tensorSQR[0][0], 9);
+		Assert::AreEqual(tensorExp[0][0], 20.0855, 1e-4);
+		Assert::AreEqual(tensorSQR[0][0], 9., 1e-10);
 	}
 
 	TEST_METHOD(MeanTest)
