@@ -15,7 +15,8 @@ namespace miniflow
 		virtual ~NodeInterface() = default;
 		virtual void forward() = 0;									// Calculates the node's output (value_)
 		virtual void backward() = 0;								// Calculates derivatives (gradient_)
-		virtual void update(Scalar /*learning_rate*/) = 0;				// Updates trainables
+		virtual void update(Scalar /*learning_rate*/) = 0;			// Updates trainables
+		virtual void print_info(std::string const& /*print*/) = 0;	//
 		virtual bool is_input() const = 0;							//
 		virtual std::vector<NodeInterface*> inbound_nodes() = 0;	//
 	};
@@ -34,7 +35,7 @@ namespace miniflow
 			const Node* node;							//: A pointer to outbound node itself.
 			std::size_t index;							//: An index of the host node in the outbound node's list of the inputs.
 
-			Tensor getGradient()
+			Tensor getGradient() const
 			{
 				return node->getGradient()[index];		// An index is used for getting the outbound node gradient with respect to host node.
 			}
@@ -48,7 +49,7 @@ namespace miniflow
 														//  Has the same size as a list of the input nodes.
 	public:
 
-		Node(std::vector<Node*> inbound) :
+		explicit Node(std::vector<Node*> inbound) :
 			inbound_nodes_(inbound)
 		{
 			// Initialize value to 0.
@@ -64,10 +65,14 @@ namespace miniflow
 
 		// Node Interface virtual functions. General implementations.
 		// Note that different functions are further overridden in Node specializations.
-		void forward() override {};
-		void backward() override {};
-		void update(Scalar /*learning_rate*/) override {};
-		bool is_input() const override { return false; }			
+		void forward() override {}
+		void backward() override {}
+		void update(Scalar /*learning_rate*/) override {}
+		bool is_input() const override { return false; }
+		void print_info(std::string const& print) override 
+		{
+			std::cout << print << value_.value_ << "\n";
+		};
 		std::vector<NodeInterface*> inbound_nodes() override
 		{
 			std::vector<NodeInterface*> inbound_nodes_interface(inbound_nodes_.size());
@@ -94,14 +99,14 @@ namespace miniflow
 
 	public:
 
-		Input(Tensor const& input) :
+		explicit Input(Tensor const& input) :
 			Node(std::vector<Node*>(0))
 		{
 			gradient_.resize(1, 0);
 			value_ = input;
 		}
 
-		void backward() override
+		void backward() final
 		{
 			// Cycle through the outputs. Sum the partial with respect to the input over all the outputs.
 			for (OutboundNode outbound_node : outbound_nodes_)
@@ -111,7 +116,7 @@ namespace miniflow
 			}
 		}
 
-		bool is_input() const override { return true; }
+		bool is_input() const final { return true; }
 	};
 
 	template<typename Tensor>
@@ -123,15 +128,16 @@ namespace miniflow
 
 	public:
 
-		Trainable(Tensor const& input) :
+		explicit Trainable(Tensor const& input) :
 			Input(input)
 		{
 		}
 
 		// Performs SGD step
-		void update(Scalar learning_rate) override
+		void update(Scalar learning_rate) final
 		{
 			value_ -= learning_rate * gradient_[0];
+			print_info("Input: ");
 		}
 	};
 
@@ -152,7 +158,7 @@ namespace miniflow
 		{
 		}
 
-		void forward() override
+		void forward() final
 		{
 			// The math behind a linear transform.
 			auto const& X = inbound_nodes_[0]->getValue();
@@ -161,7 +167,7 @@ namespace miniflow
 			value_ = dot(X, W) + b;
 		}
 
-		void backward() override
+		void backward() final
 		{
 			// Cycle through the outputs. Sum the partial with respect to the input over all the outputs.
 			for (OutboundNode outbound_node : outbound_nodes_)
@@ -190,19 +196,21 @@ namespace miniflow
 
 	public:
 
-		Sigmoid(Node& input) :
+		explicit Sigmoid(Node& input) :
 			Node(std::vector<Node*>{ &input })
 		{
 		}
 
-		void forward() override
+		void forward() final
 		{
 			// The math behind a sigmoid.
 			auto const& input = inbound_nodes_[0]->getValue();
 			value_ = 1. / (1 + exp(-input));
+
+			print_info("Prediction: ");
 		}
 
-		void backward() override
+		void backward() final
 		{
 			/*
 				The derivative of sigmoid(X):
@@ -231,19 +239,20 @@ namespace miniflow
 		Output is mean squared error;
 		*/
 
-		//cached during forward() computation for backward
+		//Cached values calculated during forward() computation for backward.
 		std::size_t m_;
-		Tensor diff_; 
+		Tensor diff_;
 		//
 
 	public:
 
 		MSE(Node& labels, Node& predictions) :
-			Node(std::vector<Node*>{ &labels, &predictions })
+			Node(std::vector<Node*>{ &labels, &predictions }),
+			m_(1)
 		{
 		}
 
-		void forward() override
+		void forward() final
 		{
 			auto const& labels = inbound_nodes_[0]->getValue();
 			auto const& predictions = inbound_nodes_[1]->getValue();
@@ -251,16 +260,18 @@ namespace miniflow
 			m_ = 1;// inbound_nodes[0]->getValue().shape[0]; //TODO
 			diff_ = labels - predictions;
 			value_ = mean(sqr(diff_));
+
+			print_info("Cost: ");
 		}
 
-		void backward() override
+		void backward() final
 		{
 			/*
 				Calculates the gradient of the cost.
-			*/		
-			
+			*/
+
 			gradient_[0] = 2. / m_ * diff_;
-			gradient_[1] = - gradient_[0];
+			gradient_[1] = -gradient_[0];
 		}
 	};
 
@@ -268,12 +279,13 @@ namespace miniflow
 	class DebugNode : public Node<Tensor>
 	{
 		/*
-			Simply sets gradient gradient with respect to the input node to one
+			Debug class.
+			Simply sets gradient gradient with respect to the input node to one.
 		*/
 
 	public:
 
-		DebugNode(Node& node) :
+		explicit DebugNode(Node& node) :
 			Node(std::vector<Node*>{ &node })
 		{
 			gradient_[0] = 1;

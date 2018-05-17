@@ -8,7 +8,7 @@ void basicNN()
 	int repeats = 10;
 
 	miniflow::Input<Tensor> X(0.2), Y(0.5);
-	miniflow::Trainable<Tensor> W(0.1), b(0);
+	miniflow::Trainable<Tensor> W(1), b(0.3);
 	miniflow::Linear<Tensor> L(X, W, b);
 	miniflow::Sigmoid<Tensor> S(L);
 	miniflow::MSE<Tensor> cost(Y, S);

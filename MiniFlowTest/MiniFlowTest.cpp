@@ -73,7 +73,7 @@ public:
 
 	TEST_METHOD(SigmoidNodeTest)
 	{
-		miniflow::Input<Tensor> X(0.2);
+		miniflow::Input<Tensor> X(0.5);
 		miniflow::Sigmoid<Tensor> S(X);
 		miniflow::DebugNode<Tensor> D(S);
 
@@ -81,13 +81,13 @@ public:
 		S.backward();
 		X.backward();
 
-		Assert::AreEqual(S.getValue().value_, 0.55, 1e-3);
-		Assert::AreEqual(X.getGradient()[0].value_, 0.247, 1e-3);
+		Assert::AreEqual(S.getValue().value_, 0.6224, 1e-3);
+		Assert::AreEqual(X.getGradient()[0].value_, 0.235, 1e-3);
 	}
 
 	TEST_METHOD(MSENodeTest)
 	{
-		miniflow::Input<Tensor> X(0.2), Y(0.5);
+		miniflow::Input<Tensor> X(0.6224), Y(0.5);
 		miniflow::MSE<Tensor> cost(Y, X);
 
 		cost.forward();
@@ -95,18 +95,18 @@ public:
 		X.backward();
 		Y.backward();
 
-		Assert::AreEqual(cost.getValue().value_, 0.09, 1e-3);
-		Assert::AreEqual(X.getGradient()[0].value_, -0.6, 1e-3);
-		Assert::AreEqual(Y.getGradient()[0].value_, 0.6, 1e-3);
+		Assert::AreEqual(cost.getValue().value_, 0.015, 1e-3);
+		Assert::AreEqual(X.getGradient()[0].value_, 0.2448, 1e-3);
+		Assert::AreEqual(Y.getGradient()[0].value_, -0.2448, 1e-3);
 	}
 
 	TEST_METHOD(FullNetworkTest)
 	{
-		miniflow::Scalar learning_rate = 0.1;
+		miniflow::Scalar learning_rate = 0.01;
 		int repeats = 10;
 
 		miniflow::Input<Tensor> X(0.2), Y(0.5);
-		miniflow::Trainable<Tensor> W(0.1), b(0);
+		miniflow::Trainable<Tensor> W(1), b(0.3);
 		miniflow::Linear<Tensor> L(X, W, b);
 		miniflow::Sigmoid<Tensor> S(L);
 		miniflow::MSE<Tensor> cost(Y, S);
@@ -114,7 +114,7 @@ public:
 		miniflow::Graph neural_network(cost);
 		neural_network.SGD(learning_rate, repeats);
 
-		Assert::AreEqual(cost.getValue().value_, 0.09, 1e-3);
+		Assert::AreEqual(cost.getValue().value_, 0., 1e-3);
 	}
 };
 

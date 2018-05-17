@@ -8,7 +8,7 @@
 #include <cmath>
 #include <numeric>
 #include <execution>
-
+#include <string>
 #include <boost/range/adaptor/reversed.hpp>
 //#include <algorithm>
 

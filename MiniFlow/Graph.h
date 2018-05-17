@@ -45,7 +45,7 @@ namespace miniflow
 
 	public:
 
-		Graph(NodeInterface& output_node)
+		explicit Graph(NodeInterface& output_node)
 		{
 			topological_sort(&output_node);
 		}
@@ -78,10 +78,10 @@ namespace miniflow
 		}
 
 		void SGD_step(Scalar learning_rate)
-		{
+		{			
 			forward();
 			backward();
-			update(learning_rate);
+			update(learning_rate);			
 		}
 
 		void SGD(Scalar learning_rate, int repeats)
@@ -89,8 +89,6 @@ namespace miniflow
 			for (size_t i = 0; i <  repeats; i++)
 			{
 				SGD_step(learning_rate);
-
-				
 			}
 		}
 	};
