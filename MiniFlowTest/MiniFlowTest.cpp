@@ -119,7 +119,7 @@ public:
 		miniflow::Graph neural_network(cost);
 		neural_network.SGD(learning_rate, repeats);
 
-		Assert::AreEqual(cost.getValue().value_, 0., 1e-3);
+		Assert::AreEqual(cost.getValue().value_, 0., 1e-5);
 	}
 };
 
