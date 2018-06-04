@@ -5,7 +5,7 @@ void basicNN()
 	using Tensor = miniflow::TensorScalar;
 
 	miniflow::Scalar learning_rate = 0.1;
-	int repeats = 10;
+	int repeats = 100;
 
 	miniflow::Input<Tensor> X(0.2), Y(0.5);
 	miniflow::Trainable<Tensor> W(1), b(0.3);

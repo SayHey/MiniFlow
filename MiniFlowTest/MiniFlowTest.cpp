@@ -102,6 +102,11 @@ public:
 
 	TEST_METHOD(FullNetworkTest)
 	{
+		/*
+			This is the final test method for computational graph on scalars.
+			It attempts to fit Trainables W and b to satisfy the expression 0.5 = sigmoid(W * 0.2 + b)
+		*/
+
 		miniflow::Scalar learning_rate = 0.01;
 		int repeats = 10;
 

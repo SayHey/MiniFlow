@@ -86,7 +86,7 @@ namespace miniflow
 
 		void SGD(Scalar learning_rate, int repeats)
 		{
-			for (size_t i = 0; i <  repeats; i++)
+			for (size_t i = 0; i < repeats; i++)
 			{
 				SGD_step(learning_rate);
 			}

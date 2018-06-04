@@ -232,11 +232,11 @@ namespace miniflow
 	class MSE : public Node<Tensor>
 	{
 		/*
-		Represents a node that calculates mean squared error cost function.
-		Should be used as the last node for a network.
+			Represents a node that calculates mean squared error cost function.
+			Should be used as the last node for a network.
 
-		Input is {labels, predictions}.
-		Output is mean squared error;
+			Input is {labels, predictions}.
+			Output is mean squared error;
 		*/
 
 		//Cached values calculated during forward() computation for backward.
@@ -280,7 +280,7 @@ namespace miniflow
 	{
 		/*
 			Debug class.
-			Simply sets gradient gradient with respect to the input node to one.
+			Simply sets gradient with respect to the input node to one.
 		*/
 
 	public:
