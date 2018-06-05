@@ -107,8 +107,8 @@ public:
 			It attempts to fit Trainables W and b to satisfy the expression 0.5 = sigmoid(W * 0.2 + b)
 		*/
 
-		miniflow::Scalar learning_rate = 0.01;
-		int repeats = 10;
+		miniflow::Scalar learning_rate = 1.;
+		int repeats = 100;
 
 		miniflow::Input<Tensor> X(0.2), Y(0.5);
 		miniflow::Trainable<Tensor> W(1), b(0.3);
@@ -119,7 +119,7 @@ public:
 		miniflow::Graph neural_network(cost);
 		neural_network.SGD(learning_rate, repeats);
 
-		Assert::AreEqual(cost.getValue().value_, 0., 1e-5);
+		Assert::AreEqual(cost.getValue().value_, 0., 1e-10);
 	}
 };
 

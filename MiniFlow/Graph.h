@@ -88,7 +88,7 @@ namespace miniflow
 		{
 			for (size_t i = 0; i < repeats; i++)
 			{
-				SGD_step(learning_rate);
+ 				SGD_step(learning_rate);
 			}
 		}
 	};

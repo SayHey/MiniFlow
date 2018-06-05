@@ -47,6 +47,11 @@ namespace miniflow
 		std::vector<Tensor> gradient_;					//: Partial derivatives of this node with respect to the input nodes.
 														//  Set by running the forward() method.
 														//  Has the same size as a list of the input nodes.
+		void clear_gradient()
+		{
+			for (auto& value : gradient_) value = 0;
+		}
+	
 	public:
 
 		explicit Node(std::vector<Node*> inbound) :
@@ -73,7 +78,7 @@ namespace miniflow
 		{
 			std::cout << print << value_.value_ << "\n";
 		};
-		std::vector<NodeInterface*> inbound_nodes() override
+		std::vector<NodeInterface*> inbound_nodes() final
 		{
 			std::vector<NodeInterface*> inbound_nodes_interface(inbound_nodes_.size());
 			for (std::size_t i = 0; i < inbound_nodes_.size(); i++)
@@ -108,6 +113,7 @@ namespace miniflow
 
 		void backward() final
 		{
+			clear_gradient();
 			// Cycle through the outputs. Sum the partial with respect to the input over all the outputs.
 			for (OutboundNode outbound_node : outbound_nodes_)
 			{
@@ -137,7 +143,6 @@ namespace miniflow
 		void update(Scalar learning_rate) final
 		{
 			value_ -= learning_rate * gradient_[0];
-			print_info("Input: ");
 		}
 	};
 
@@ -169,6 +174,7 @@ namespace miniflow
 
 		void backward() final
 		{
+			clear_gradient();
 			// Cycle through the outputs. Sum the partial with respect to the input over all the outputs.
 			for (OutboundNode outbound_node : outbound_nodes_)
 			{
@@ -206,8 +212,6 @@ namespace miniflow
 			// The math behind a sigmoid.
 			auto const& input = inbound_nodes_[0]->getValue();
 			value_ = 1. / (1 + exp(-input));
-
-			print_info("Prediction: ");
 		}
 
 		void backward() final
@@ -217,6 +221,7 @@ namespace miniflow
 				d/dx[sigmoid(x)] = sigmoid(X) * (1 - sigmoid(X))
 			*/
 
+			clear_gradient();
 			// Cycle through the outputs. Sum the partial with respect to the input over all the outputs.
 			for (OutboundNode outbound_node : outbound_nodes_)
 			{
@@ -270,8 +275,8 @@ namespace miniflow
 				Calculates the gradient of the cost.
 			*/
 
-			gradient_[0] = 2. / m_ * diff_;
-			gradient_[1] = -gradient_[0];
+			gradient_[0] = 2. / m_ * diff_; //gradient with respect to labels
+			gradient_[1] = -gradient_[0];   //gradient with respect to predictions
 		}
 	};
 
