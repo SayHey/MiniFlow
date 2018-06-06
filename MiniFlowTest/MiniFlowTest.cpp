@@ -100,7 +100,7 @@ public:
 		Assert::AreEqual(Y.getGradient()[0].value_, -0.2448, 1e-3);
 	}
 
-	TEST_METHOD(FullNetworkTest)
+	TEST_METHOD(SGDTest)
 	{
 		/*
 			This is the final test method for computational graph on scalars.
@@ -115,6 +115,38 @@ public:
 		miniflow::Linear<Tensor> L(X, W, b);
 		miniflow::Sigmoid<Tensor> S(L);
 		miniflow::MSE<Tensor> cost(Y, S);
+
+		miniflow::Graph neural_network(cost);
+		neural_network.SGD(learning_rate, repeats);
+
+		Assert::AreEqual(cost.getValue().value_, 0., 1e-10);
+	}
+
+	TEST_METHOD(DeepNetworkTest)
+	{
+		/*
+		This is the final test method for computational graph on scalars.
+		It attempts to fit Trainables W and b to satisfy the expression 0.5 = sigmoid(W * 0.2 + b)
+		*/
+
+		miniflow::Scalar learning_rate = 1.;
+		int repeats = 100;
+		
+		miniflow::Input<Tensor> X(0.2), Y(0.5);		
+		//Layer 1
+		miniflow::Trainable<Tensor> W1(1.), b1(0.1);
+		miniflow::Linear<Tensor> L1(X, W1, b1);
+		miniflow::Sigmoid<Tensor> S1(L1);
+		//Layer 2
+		miniflow::Trainable<Tensor> W2(1.), b2(0.1);
+		miniflow::Linear<Tensor> L2(S1, W2, b2);
+		miniflow::Sigmoid<Tensor> S2(L2);
+		//Layer 1
+		miniflow::Trainable<Tensor> W3(1), b3(0.1);
+		miniflow::Linear<Tensor> L3(S2, W3, b3);
+		miniflow::Sigmoid<Tensor> S3(L3);
+		//
+		miniflow::MSE<Tensor> cost(Y, S3);
 
 		miniflow::Graph neural_network(cost);
 		neural_network.SGD(learning_rate, repeats);
