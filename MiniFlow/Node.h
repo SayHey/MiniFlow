@@ -49,7 +49,7 @@ namespace miniflow
 														//  Has the same size as a list of the input nodes.
 		void clear_gradient()
 		{
-			for (auto& value : gradient_) value = 0;
+			for (auto& value : gradient_) value = Tensor();
 		}
 	
 	public:
@@ -57,10 +57,8 @@ namespace miniflow
 		explicit Node(std::vector<Node*> inbound) :
 			inbound_nodes_(inbound)
 		{
-			// Initialize value to 0.
-			value_ = 0;
 			// Initialize a partial derivative for each of the inbound_nodes to 0.
-			gradient_.resize(inbound.size(), 0);
+			gradient_.resize(inbound.size(), Tensor());
 			// Sets this node as an outbound node for all of this node's inputs.
 			for (std::size_t i = 0; i < inbound_nodes_.size(); i++)
 			{
@@ -76,8 +74,8 @@ namespace miniflow
 		bool is_input() const override { return false; }
 		void print_info(std::string const& print) override 
 		{
-			std::cout << print << value_.value_ << "\n";
-		};
+			//std::cout << print << value_.value_ << "\n"; //FIX PRINT INFO
+		}
 		std::vector<NodeInterface*> inbound_nodes() final
 		{
 			std::vector<NodeInterface*> inbound_nodes_interface(inbound_nodes_.size());
@@ -107,7 +105,7 @@ namespace miniflow
 		explicit Input(Tensor const& input) :
 			Node(std::vector<Node*>(0))
 		{
-			gradient_.resize(1, 0);
+			gradient_.resize(1, Tensor());
 			value_ = input;
 		}
 
@@ -280,8 +278,8 @@ namespace miniflow
 		}
 	};
 
-	template<typename Tensor>
-	class DebugNode : public Node<Tensor>
+	
+	class DebugNode : public Node<miniflow::TensorScalar>
 	{
 		/*
 			Debug class.
@@ -290,8 +288,9 @@ namespace miniflow
 
 	public:
 
-		explicit DebugNode(Node& node) :
-			Node(std::vector<Node*>{ &node })
+		template<typename Tensor>
+		explicit DebugNode(Node<Tensor>& node) :
+			Node<miniflow::TensorScalar>(std::vector<Node<Tensor>*>{ &node })
 		{
 			gradient_[0] = 1;
 		}

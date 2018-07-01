@@ -9,6 +9,38 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 constexpr double eps = 1e-10;
 
+TEST_CLASS(TensorNodeTest)
+{
+	template<class T, unsigned rank>
+	using Tensor = dynamictensor::Tensor<T, rank>;
+
+public:
+
+	TEST_METHOD(InputNodeTest)
+	{
+		int constexpr inputRank = 2;
+		dynamictensor::Shape<inputRank> inputShape{ 2, 5 };
+		dynamictensor::Tensor<double, inputRank> inputTensor(inputShape, 3);
+		miniflow::Input<Tensor<double, inputRank>> inputNode(inputTensor);
+		//replace all above with special templated make_node function
+
+
+		miniflow::DebugNode debug(inputNode);
+
+		Assert::AreEqual(inputNode.is_input(), true);
+		Assert::AreEqual(inputNode.getValue()[0][0], 3.);
+		Assert::AreEqual(inputNode.getGradient()[0][0][0], 0.);
+		Assert::AreEqual(inputNode.inbound_nodes().size(), size_t(0));
+
+		//X.forward();
+		//X.backward();
+		//X.update(0.1);
+
+		//Assert::AreEqual(X.getValue().value_, 0.2);
+		//Assert::AreEqual(X.getGradient()[0].value_, 1.);
+	}
+};
+
 TEST_CLASS(BasicNodeTest)
 {
 	using Tensor = miniflow::TensorScalar;	
@@ -18,7 +50,7 @@ public:
 	TEST_METHOD(InputNodeTest)
 	{
 		miniflow::Input<Tensor> X(0.2);
-		miniflow::DebugNode<Tensor> D(X);
+		miniflow::DebugNode D(X);
 		
 		Assert::AreEqual(X.is_input(), true);
 		Assert::AreEqual(X.getValue().value_, 0.2);
@@ -36,7 +68,7 @@ public:
 	TEST_METHOD(TrainableNodeTest)
 	{
 		miniflow::Trainable<Tensor> W(0.1);
-		miniflow::DebugNode<Tensor> D(W);
+		miniflow::DebugNode D(W);
 
 		Assert::AreEqual(W.is_input(), true);
 		Assert::AreEqual(W.getValue().value_, 0.1);
@@ -56,7 +88,7 @@ public:
 		miniflow::Input<Tensor> X(0.2);
 		miniflow::Trainable<Tensor> W(1), b(0.3);
 		miniflow::Linear<Tensor> L(X, W, b);
-		miniflow::DebugNode<Tensor> D(L);
+		miniflow::DebugNode D(L);
 
 		Assert::AreEqual(L.is_input(), false);
 		Assert::AreEqual(L.getValue().value_, 0.);
@@ -75,7 +107,7 @@ public:
 	{
 		miniflow::Input<Tensor> X(0.5);
 		miniflow::Sigmoid<Tensor> S(X);
-		miniflow::DebugNode<Tensor> D(S);
+		miniflow::DebugNode D(S);
 
 		S.forward();
 		S.backward();
