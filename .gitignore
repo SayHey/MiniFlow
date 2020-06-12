@@ -1,15 +1,2 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/.vs/MiniFlow/v15
-/Debug
-/MiniFlow.vcxproj.filters
-/MiniFlow.vcxproj
-/MiniFlow.sln
-/x64/Debug
-/MiniFlow/x64/Debug
-/Tensor/x64/Debug
-/DynamicTensor/x64/Debug
-/StaticTensor/x64/Debug
-/MiniFlowTest/x64/Debug
+﻿.vscode/
+build/
