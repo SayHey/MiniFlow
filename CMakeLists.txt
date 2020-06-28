@@ -4,15 +4,22 @@ project(MiniFlow CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+conan_basic_setup(TARGETS)
 
 # set up tests
-option(ENABLE_TESTING "Enable Test Builds" OFF)
+option(ENABLE_TESTING "Enable Test Builds" ON)
 if(ENABLE_TESTING)
-  enable_testing()
-  message("Building Tests")
-  add_subdirectory(test)
+    enable_testing()
+    message("Building Tests")
+
+    include(GoogleTest)
+    add_executable(tensor_test test/tensor_test.cpp)
+    target_link_libraries(tensor_test PRIVATE CONAN_PKG::gtest)
+    gtest_add_tests(TARGET tensor_test
+                    TEST_SUFFIX .noArgs
+                    TEST_LIST   noArgsTests
+    )
 endif()
 
 #
-add_executable(nn src/nn.cpp)
+# add_executable(nn src/nn.cpp)
