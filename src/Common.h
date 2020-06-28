@@ -9,8 +9,8 @@
 #include <numeric>
 #include <execution>
 #include <string>
-#include <boost/range/adaptor/reversed.hpp>
-//#include <algorithm>
+#include <algorithm>
+#include <execution>
 
 namespace miniflow
 {

@@ -1,12 +1,5 @@
-#include "stdafx.h"
-#include "CppUnitTest.h"
-#include "CppUnitTestAssert.h"
 
-#include "../MiniFlow/DynamicTensor.h"
-#include "../MiniFlow/StaticTensor.h"
-#include "../MiniFlow/Graph.h"
 
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 constexpr double eps = 1e-10;
 
 TEST_CLASS(TensorNodeTest)
