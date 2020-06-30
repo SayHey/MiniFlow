@@ -5,10 +5,8 @@
 
 namespace dynamictensor
 {
-	using miniflow::iterate;
 	using miniflow::Scalar;
 	using miniflow::Index;
-	using miniflow::EXP;
 
 	template<unsigned rank> struct Shape
 	{
@@ -22,15 +20,15 @@ namespace dynamictensor
 
 		// Shape convolution returns rank - 1 fold of
 		// original shape without k's dimention.
-		SubShape convoluteShape(int k) const
+		SubShape convoluteShape(uint k) const
 		{
 			if constexpr (rank == 1) return 0;
 			else
 			{
 				SubShape subshape;
-				for (int i = 0; i < rank - 1; i++)
+				for (uint i = 0; i < rank - 1; i++)
 				{
-					int j = (i < k) ? i : i + 1;
+					uint j = (i < k) ? i : i + 1;
 					subshape[i] = idx_[j];
 				}
 				return subshape;
@@ -73,7 +71,7 @@ namespace dynamictensor
 
 		bool operator==(Shape const& s) const
 		{
-			for (int i = 0; i < rank; i++)
+			for (uint i = 0; i < rank; i++)
 			{
 				if (s.idx_[i] != idx_[i]) return false;
 			}
@@ -108,19 +106,19 @@ namespace dynamictensor
 
 		// Internal logic
 
-		//
+        //
 		template<typename F>
-		void each(F fn)
+		void each(F fn) const
 		{
-			iterate(Index(0), shape_[0], [&](Index i)
+			for (Index i = 0; i < shape_[0]; i++)
 			{
 				fn(i, data_[i]);
-			});
+			}
 		}
 
 		//
 		template<typename F>
-		void each(F fn) const
+		void each(F fn)
 		{
 			for (Index i = 0; i < shape_[0]; i++)
 			{
@@ -178,22 +176,19 @@ namespace dynamictensor
 		Tensor(Shape<rank> const& shape) : Tensor(shape, 0) {}
 
 		// Initialize tensor of given shape filled with value
-		template<unsigned rank>
 		Tensor(Shape<rank> const& shape, T value) : shape_(shape)
-		{
-			data_.resize(shape[0]);
-			for (auto& subTensor : data_)
-			{
-				subTensor = SubTensor(shape.subShape(), value);
-			}
-		}
-
-		// Initialize vector of given shape filled with value
-		template<>
-		Tensor(Shape<1> const& shape, T value) : shape_(shape)
-		{
-			data_.resize(shape[0], value);
-		}
+        {
+            if constexpr (rank == 1)
+                data_.resize(shape[0], value);
+            else
+            {
+                data_.resize(shape[0]);
+                for (auto &subTensor : data_)
+                {
+                    subTensor = SubTensor(shape.subShape(), value);
+                }
+            }
+        }
 
 		// Access operator const
 		SubTensor operator[](Index i) const
@@ -337,7 +332,7 @@ namespace dynamictensor
 
 		friend Tensor exp(Tensor const& input)
 		{
-			return input.map_all([&](T x) {return std::pow(EXP, x); });
+			return input.map_all([&](T x) {return std::exp(x); });
 		}
 
 		friend Tensor sqr(Tensor const& input)

@@ -13,13 +13,16 @@ if(ENABLE_TESTING)
     enable_testing()
     message("Building Tests")
 
+    include(CTest)
     include(GoogleTest)
+    
     add_executable(tensor_test test/tensor_test.cpp)
     target_link_libraries(tensor_test PRIVATE CONAN_PKG::gtest)
-    gtest_add_tests(TARGET tensor_test
-                    TEST_SUFFIX .noArgs
-                    TEST_LIST   noArgsTests
-    )
+    gtest_discover_tests(tensor_test)
+
+    add_executable(nn_test test/nn_test.cpp)
+    target_link_libraries(nn_test PRIVATE CONAN_PKG::gtest)
+    gtest_discover_tests(nn_test)
 endif()
 
 #

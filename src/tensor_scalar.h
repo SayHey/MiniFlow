@@ -136,7 +136,7 @@ namespace miniflow
 
 		friend TensorScalar exp(const TensorScalar& t)
 		{
-			return pow(EXP, t.value_);
+			return exp(t.value_);
 		}
 
 		friend TensorScalar sqr(const TensorScalar& t)

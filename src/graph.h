@@ -1,6 +1,6 @@
 #pragma once
 #include "node.h"
-
+#include <ranges>
 namespace miniflow
 {
 	class Graph
@@ -10,50 +10,53 @@ namespace miniflow
 			Input nodes are calculated first.
 		*/
 
-		std::list<NodeInterface*> nodes_;
+		const std::list<Node*> nodes_;
 
 		// Traverse the graph from the top to the bottom
 		template<typename F>
-		void traverse(NodeInterface* node, F fn)
+		constexpr void traverse(Node* node, F fn) const
 		{
 			fn(node);
-			for (NodeInterface* input : node->inbound_nodes())
+			for (Node* input : node->inbound_nodes())
 			{
 				traverse(input, fn);
 			}
 		}
 
-		void topological_sort(NodeInterface* output_node)
+		std::list<Node*> topological_sort(Node* output_node) const
 		{
 			/*
 				Sort the nodes in topological order
 			*/
 
-			std::list<NodeInterface*> input_nodes;
+            std::list<Node*> nodes;
+			std::list<Node*> input_nodes;
 
-			traverse(output_node, [&](NodeInterface* node)
+			traverse(output_node, [&](Node* node)
 			{
 				if (node->is_input()) input_nodes.push_front(node);
-				else nodes_.push_front(node);
+				else nodes.push_front(node);
 			});
 
-			for (NodeInterface* node : input_nodes)
+			for (Node* node : input_nodes)
 			{
-				nodes_.push_front(node);
+				nodes.push_front(node);
 			}
+
+            return nodes;
 		}
 
 	public:
 
-		explicit Graph(NodeInterface& output_node)
+		explicit Graph(Node& output_node):
+            nodes_(topological_sort(&output_node))
 		{
-			topological_sort(&output_node);
 		}
 
 		// Performs a forward pass through a list of Nodes.
 		void forward()
 		{
-			for (NodeInterface* node : nodes_)
+			for (Node* node : nodes_)
 			{
 				node->forward();
 			}
@@ -62,7 +65,7 @@ namespace miniflow
 		// Performs a backward pass through a list of Nodes.
 		void backward()
 		{
-			for (NodeInterface* node : boost::adaptors::reverse(nodes_))
+			for (Node* node : nodes_ | std::views::reverse)
 			{
 				node->backward();
 			}
@@ -71,7 +74,7 @@ namespace miniflow
 		// Performs an update of all the trainable Nodes.
 		void update(Scalar learning_rate)
 		{
-			for (NodeInterface* node : nodes_)
+			for (Node* node : nodes_)
 			{
 				node->update(learning_rate);
 			}
@@ -84,9 +87,9 @@ namespace miniflow
 			update(learning_rate);			
 		}
 
-		void SGD(Scalar learning_rate, int repeats)
+		void SGD(Scalar learning_rate, uint repeats)
 		{
-			for (size_t i = 0; i < repeats; i++)
+			for (uint i = 0; i < repeats; i++)
 			{
  				SGD_step(learning_rate);
 			}

@@ -5,24 +5,9 @@
 
 namespace miniflow
 {
-	//using placeholder::Tensor;
+	using Tensor = TensorScalar;
 
-	class NodeInterface
-	{
-
-	public:
-
-		virtual ~NodeInterface() = default;
-		virtual void forward() = 0;									// Calculates the node's output (value_)
-		virtual void backward() = 0;								// Calculates derivatives (gradient_)
-		virtual void update(Scalar /*learning_rate*/) = 0;			// Updates trainables
-		virtual void print_info(std::string const& /*print*/) = 0;	//
-		virtual bool is_input() const = 0;							//
-		virtual std::vector<NodeInterface*> inbound_nodes() = 0;	//
-	};
-
-	template<typename Tensor>
-	class Node : public NodeInterface
+	class Node
 	{
 		/*
 			Base class for nodes in the network.
@@ -35,9 +20,9 @@ namespace miniflow
 			const Node* node;							//: A pointer to outbound node itself.
 			std::size_t index;							//: An index of the host node in the outbound node's list of the inputs.
 
-			Tensor getGradient() const
+			auto getGradient() const
 			{
-				return node->getGradient()[index];		// An index is used for getting the outbound node gradient with respect to host node.
+				return node->gradient_[index];		// An index is used for getting the outbound node gradient with respect to host node.
 			}
 		};
 
@@ -54,6 +39,7 @@ namespace miniflow
 	
 	public:
 
+        // Constructor
 		explicit Node(std::vector<Node*> inbound) :
 			inbound_nodes_(inbound)
 		{
@@ -66,19 +52,16 @@ namespace miniflow
 			}
 		}
 
-		// Node Interface virtual functions. General implementations.
-		// Note that different functions are further overridden in Node specializations.
-		void forward() override {}
-		void backward() override {}
-		void update(Scalar /*learning_rate*/) override {}
-		bool is_input() const override { return false; }
-		void print_info(std::string const& print) override 
+		// Node Interface virtual functions
+		virtual void forward() {} // Calculates the node's output (value_)
+		virtual void backward() {}
+		virtual void update(Scalar /*learning_rate*/) {}
+        virtual bool is_input() const { return false; }
+        virtual void print_info(std::string const& print) const {};	
+		
+		std::vector<Node*> inbound_nodes()
 		{
-			//std::cout << print << value_.value_ << "\n"; //FIX PRINT INFO
-		}
-		std::vector<NodeInterface*> inbound_nodes() final
-		{
-			std::vector<NodeInterface*> inbound_nodes_interface(inbound_nodes_.size());
+			std::vector<Node*> inbound_nodes_interface(inbound_nodes_.size());
 			for (std::size_t i = 0; i < inbound_nodes_.size(); i++)
 			{
 				inbound_nodes_interface[i] = inbound_nodes_[i];
@@ -91,8 +74,7 @@ namespace miniflow
 		auto getGradient() const { return gradient_; }
 	};
 
-	template<typename Tensor>
-	class Input : public Node<Tensor>
+	class Input : public Node
 	{
 		/*
 			A generic input into the network.
@@ -123,8 +105,7 @@ namespace miniflow
 		bool is_input() const final { return true; }
 	};
 
-	template<typename Tensor>
-	class Trainable : public Input<Tensor>
+	class Trainable : public Input
 	{
 		/*
 			A trainable parameter of the network.
@@ -144,8 +125,7 @@ namespace miniflow
 		}
 	};
 
-	template<typename Tensor>
-	class Linear : public Node<Tensor>
+	class Linear : public Node
 	{
 		/*
 			Represents a node that performs a linear transform.
@@ -188,8 +168,7 @@ namespace miniflow
 		}
 	};
 
-	template<typename Tensor>
-	class Sigmoid : public Node<Tensor>
+	class Sigmoid : public Node
 	{
 		/*
 			 Represents a node that performs the sigmoid activation function.
@@ -231,8 +210,7 @@ namespace miniflow
 		};
 	};
 
-	template<typename Tensor>
-	class MSE : public Node<Tensor>
+	class MSE : public Node
 	{
 		/*
 			Represents a node that calculates mean squared error cost function.
@@ -279,7 +257,7 @@ namespace miniflow
 	};
 
 	
-	class DebugNode : public Node<miniflow::TensorScalar>
+	class DebugNode : public Node
 	{
 		/*
 			Debug class.
@@ -287,10 +265,8 @@ namespace miniflow
 		*/
 
 	public:
-
-		template<typename Tensor>
-		explicit DebugNode(Node<Tensor>& node) :
-			Node<miniflow::TensorScalar>(std::vector<Node<Tensor>*>{ &node })
+		explicit DebugNode(Node& node) :
+			Node(std::vector<Node*>{ &node })
 		{
 			gradient_[0] = 1;
 		}
